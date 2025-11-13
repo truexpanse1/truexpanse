@@ -1,0 +1,133 @@
+import React, { useState } from 'react';
+import { Contact, CalendarEvent, formatPhoneNumber, followUpSchedule } from '../types';
+import Calendar from '../components/Calendar';
+import QuickActions from '../components/QuickActions';
+import SetAppointmentModal from '../components/SetAppointmentModal';
+import ConvertToClientModal from '../components/ConvertToClientModal';
+
+interface HotLeadsPageProps {
+  hotLeads: Contact[];
+  onAddHotLead: (leadData: Omit<Contact, 'id'>) => Promise<Contact | null>;
+  onUpdateHotLead: (lead: Contact) => void;
+  onDeleteHotLead: (leadId: string) => void;
+  selectedDate: Date;
+  onDateChange: (date: Date) => void;
+  handleSetAppointment: (appointment: { client: string, lead: string, time: string, details?: string }, date: Date) => void;
+  onConvertToClient: (contact: Contact, initialAmountCollected: number) => void;
+}
+
+const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onUpdateHotLead, onDeleteHotLead, selectedDate, onDateChange, handleSetAppointment, onConvertToClient }) => {
+  const [isAppointmentModalOpen, setIsAppointmentModalOpen] = useState(false);
+  const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Contact | null>(null);
+  const [expandedFollowUps, setExpandedFollowUps] = useState<string | null>(null);
+
+  const handleLeadChange = (id: string, field: keyof Omit<Contact, 'id'>, value: string | number) => {
+    const leadToUpdate = hotLeads.find(l => l.id === id);
+    if (!leadToUpdate) return;
+    const updatedValue = field === 'phone' ? formatPhoneNumber(String(value)) : value;
+    onUpdateHotLead({ ...leadToUpdate, [field]: updatedValue });
+  };
+
+  const handleRemoveLead = (id: string) => {
+    if (window.confirm("Are you sure you want to remove this hot lead?")) {
+        onDeleteHotLead(id);
+    }
+  };
+
+  const handleAddLead = () => {
+    const newLead: Omit<Contact, 'id'> = {
+      name: '', company: '', date: new Date().toISOString().split('T')[0], phone: '', email: '',
+      interestLevel: 5, prospecting: {}, dateAdded: new Date().toISOString(), completedFollowUps: {}
+    };
+    onAddHotLead(newLead);
+  };
+  
+  const handleOpenAppointmentModal = (lead: Contact) => {
+      setSelectedLead(lead);
+      setIsAppointmentModalOpen(true);
+  };
+
+  const handleOpenConvertToClientModal = (lead: Contact) => {
+      setSelectedLead(lead);
+      setIsConvertModalOpen(true);
+  };
+  
+  const handleSaveAppointment = ({ date, time, note }: { date: string, time: string, note: string }) => {
+    if (!selectedLead) return;
+    const appointmentDate = new Date(`${date}T${time}`);
+    handleSetAppointment({ client: selectedLead.name, lead: 'Hot Lead', time: time, details: note }, appointmentDate);
+    onUpdateHotLead({ ...selectedLead, appointmentDate: date });
+    setIsAppointmentModalOpen(false);
+  };
+
+  const handleConfirmConvertToClient = (amount: number) => {
+    if (!selectedLead) return;
+    onConvertToClient(selectedLead, amount);
+    setIsConvertModalOpen(false);
+  }
+
+  const handleQuickSetAppointment = (data: { name: string, phone: string, email: string, date: string, time: string, interestLevel: number }) => {
+    const appointmentDate = new Date(`${data.date}T${data.time}`);
+    handleSetAppointment({ client: data.name, lead: 'Hot Lead', time: data.time }, appointmentDate);
+  };
+  
+  const handleQuickAddToHotLeads = (data: { name: string, phone: string, email: string, interestLevel: number }) => {
+    const newLead: Omit<Contact, 'id'> = {
+        name: data.name, company: '', date: new Date().toISOString().split('T')[0], phone: data.phone, email: data.email,
+        interestLevel: data.interestLevel, prospecting: {}, dateAdded: new Date().toISOString(), completedFollowUps: {}
+    };
+    onAddHotLead(newLead);
+    alert(`${data.name} added to Hot Leads!`);
+  };
+
+  return (
+    <>
+     <SetAppointmentModal isOpen={isAppointmentModalOpen} onClose={() => setIsAppointmentModalOpen(false)} onSave={handleSaveAppointment} contact={selectedLead} />
+     <ConvertToClientModal isOpen={isConvertModalOpen} onClose={() => setIsConvertModalOpen(false)} onSave={handleConfirmConvertToClient} contact={selectedLead} />
+     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-3 space-y-8">
+            <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
+             <QuickActions onSetAppointment={handleQuickSetAppointment} onAddToHotLeads={handleQuickAddToHotLeads} />
+        </div>
+        <div className="lg:col-span-9">
+            <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
+              <div className="flex justify-between items-center mb-6">
+                <h1 className="text-3xl font-bold text-brand-light-text dark:text-white">Hot Leads</h1>
+                <button onClick={handleAddLead} className="bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm">+ Add New Lead</button>
+              </div>
+              
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left table-auto">
+                  <thead className="bg-brand-light-bg dark:bg-brand-gray/50 text-xs uppercase text-gray-500 dark:text-gray-400">
+                    <tr>
+                      <th className="p-3">Name</th><th className="p-3">Phone</th><th className="p-3">Email</th>
+                      <th className="p-3 text-center">Follow-ups</th><th className="p-3">Actions</th><th className="p-3 text-center w-12"></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {hotLeads.map(lead => (
+                      <React.Fragment key={lead.id}>
+                      <tr className="border-b border-brand-light-border dark:border-brand-gray">
+                        <td className="p-2"><input type="text" value={lead.name} onBlur={e => handleLeadChange(lead.id, 'name', e.target.value)} onChange={e => handleLeadChange(lead.id, 'name', e.target.value)} className="w-full bg-transparent p-1 focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white" /></td>
+                        <td className="p-2"><input type="tel" value={lead.phone} onBlur={e => handleLeadChange(lead.id, 'phone', e.target.value)} onChange={e => handleLeadChange(lead.id, 'phone', e.target.value)} className="w-full bg-transparent p-1 focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white" /></td>
+                        <td className="p-2"><input type="email" value={lead.email} onBlur={e => handleLeadChange(lead.id, 'email', e.target.value)} onChange={e => handleLeadChange(lead.id, 'email', e.target.value)} className="w-full bg-transparent p-1 focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white" /></td>
+                        <td className="p-2 text-center"><button onClick={() => setExpandedFollowUps(expandedFollowUps === lead.id ? null : lead.id)} className="font-bold text-brand-blue hover:underline" disabled={!lead.appointmentDate} title={!lead.appointmentDate ? "Set an appointment to start follow-ups" : "View Follow-up Plan"}>{lead.completedFollowUps ? Object.keys(lead.completedFollowUps).length : 0} / {Object.keys(followUpSchedule).length}</button></td>
+                        <td className="p-2 flex items-center gap-2"><button onClick={() => handleOpenAppointmentModal(lead)} className="bg-brand-blue text-white font-bold py-1 px-3 rounded-md hover:bg-blue-700 transition text-xs">Set Appt</button><button onClick={() => handleOpenConvertToClientModal(lead)} className="bg-brand-lime text-brand-ink font-bold py-1 px-3 rounded-md hover:bg-green-400 transition text-xs">Convert</button></td>
+                        <td className="p-2 text-center"><button onClick={() => handleRemoveLead(lead.id)} className="text-red-500 hover:text-red-400 font-bold text-xl" title="Remove Lead">&times;</button></td>
+                      </tr>
+                      {expandedFollowUps === lead.id && (<tr><td colSpan={6} className="p-3 bg-brand-light-bg dark:bg-brand-gray/20"><h4 className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2">Follow-up Plan (Starts: {lead.appointmentDate})</h4><ul className="text-xs space-y-1">{Object.entries(followUpSchedule).map(([day, activity]) => { const isCompleted = lead.completedFollowUps && lead.completedFollowUps[parseInt(day,10)]; return (<li key={day} className={`flex items-center ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-700 dark:text-gray-300'}`}><span className="font-bold w-12">Day {day}:</span><span>{activity}</span></li>)})}</ul></td></tr>)}
+                      </React.Fragment>
+                    ))}
+                    {hotLeads.length === 0 && (<tr><td colSpan={6} className="text-center p-8 text-gray-500 dark:text-gray-400">No hot leads yet. Add some from the Prospecting page!</td></tr>)}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+        </div>
+    </div>
+    </>
+  );
+};
+
+export default HotLeadsPage;
