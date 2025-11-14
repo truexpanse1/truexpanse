@@ -1,5 +1,4 @@
-
-// types.ts
+// src/types.ts
 
 //
 // Core Application Types
@@ -59,7 +58,7 @@ export interface CalendarEvent {
   isRecurring?: boolean;
   groupId?: string;
   userId?: string;
-  conducted?: boolean; // Added to track completed appointments
+  conducted?: boolean;
 }
 
 export interface Goal {
@@ -168,7 +167,7 @@ export interface DayData {
     milestones: {
       calls30Achieved: boolean;
     };
-    talkTime: string; // Added for EOD Report
+    talkTime: string;
     eodSubmitted?: boolean;
     userId?: string;
 }

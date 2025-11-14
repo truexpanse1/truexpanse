@@ -1,15 +1,13 @@
-
-
 import { GoogleGenAI, Type, Modality } from "@google/genai";
 import { Quote, Book } from '../types';
 
-const geminiApiKey = process.env.API_KEY || 'placeholder-gemini-key';
+const geminiApiKey = process.env.VITE_GEMINI_API_KEY || 'placeholder-gemini-key';
 
 if (geminiApiKey === 'placeholder-gemini-key') {
     console.warn(`
     ********************************************************************************
     ** WARNING: Gemini API key is not set!                                          **
-    ** AI features may not work. Please set the API_KEY environment variable.       **
+    ** AI features may not work. Please set the VITE_GEMINI_API_KEY env variable.   **
     ********************************************************************************
     `);
 }

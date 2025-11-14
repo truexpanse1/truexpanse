@@ -68,7 +68,7 @@ const DailyFollowUps: React.FC<DailyFollowUpsProps> = ({ hotLeads, onUpdateHotLe
                             checked={isCompleted}
                             onChange={() => handleFollowUpCompletion(lead, day, activity)}
                             disabled={isCompleted}
-                            className="h-5 w-5 mt-0.5 rounded bg-brand-light-border dark:bg-brand-gray border-gray-300 dark:border-gray-600 text-brand-lime focus:ring-brand-lime disabled:opacity-50"
+                            className="h-5 w-5 mt-0.5 rounded bg-brand-light-border dark:bg-brand-gray border-gray-300 dark:border-gray-600 text-brand-blue focus:ring-brand-blue disabled:opacity-50"
                         />
                         <label htmlFor={`followup-${lead.id}-${day}`} className={`text-sm ${isCompleted ? 'line-through text-gray-500' : 'text-brand-light-text dark:text-gray-300'}`}>
                             <span className="font-semibold">{activity}</span> for {lead.name}

@@ -1,29 +1,52 @@
+
 import React from 'react';
+import { CalendarEvent, formatTime12Hour } from '../types';
 
 interface AppointmentsBlockProps {
-    appointmentsCount: number;
+    events: CalendarEvent[];
+    onEventUpdate: (event: CalendarEvent) => void;
     onAddAppointment: () => void;
-    onViewAppointments: () => void;
 }
 
-const AppointmentsBlock: React.FC<AppointmentsBlockProps> = ({ appointmentsCount, onAddAppointment, onViewAppointments }) => {
+const AppointmentsBlock: React.FC<AppointmentsBlockProps> = ({ events, onEventUpdate, onAddAppointment }) => {
+    
+    const appointments = events.filter(e => e.type === 'Appointment');
+
+    const handleConductedToggle = (event: CalendarEvent) => {
+        onEventUpdate({ ...event, conducted: !event.conducted });
+    };
+
     return (
         <div className="bg-brand-light-card dark:bg-brand-navy p-4 rounded-lg border border-brand-light-border dark:border-brand-gray">
-            <h3 className="text-sm font-bold text-brand-red uppercase mb-2">Today's Appointments</h3>
-            <div className="text-center my-4">
-                <p className="text-6xl font-black text-brand-light-text dark:text-white">{appointmentsCount}</p>
+            <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-bold text-brand-red uppercase">Today's Appointments</h3>
+                <button onClick={onAddAppointment} className="bg-brand-lime text-brand-ink font-bold py-1 px-3 rounded-lg hover:bg-green-400 transition text-xs">
+                    + Add
+                </button>
             </div>
-            <div className="grid grid-cols-2 gap-2">
-                <button 
-                    onClick={onViewAppointments}
-                    disabled={appointmentsCount === 0}
-                    className="w-full bg-brand-blue text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition text-sm disabled:bg-brand-gray disabled:cursor-not-allowed"
-                >
-                    View Appointments
-                </button>
-                <button onClick={onAddAppointment} className="w-full bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm">
-                    + Add Appointment
-                </button>
+            <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+                {appointments.length > 0 ? (
+                    appointments.map(event => (
+                        <div key={event.id} className="flex items-center space-x-3">
+                            <input
+                                type="checkbox"
+                                checked={!!event.conducted}
+                                onChange={() => handleConductedToggle(event)}
+                                className="h-5 w-5 rounded bg-brand-light-border dark:bg-brand-gray border-gray-300 dark:border-gray-600 text-brand-lime focus:ring-brand-lime"
+                            />
+                            <div className="flex-grow">
+                                <p className={`text-sm font-semibold ${event.conducted ? 'line-through text-gray-500' : 'text-brand-light-text dark:text-white'}`}>
+                                    {event.client || event.title}
+                                </p>
+                                <p className={`text-xs ${event.conducted ? 'line-through text-gray-500' : 'text-gray-500 dark:text-gray-400'}`}>
+                                    {formatTime12Hour(event.time)}
+                                </p>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <p className="text-xs text-center text-gray-500 py-4">No appointments scheduled for today.</p>
+                )}
             </div>
         </div>
     );

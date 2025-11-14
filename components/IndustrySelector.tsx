@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { getProductsForIndustry } from '../services/geminiService';
 
@@ -16,6 +17,7 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({ onProductSelect }) 
     const [selectedIndustry, setSelectedIndustry] = useState('');
     const [generatedProducts, setGeneratedProducts] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [customProduct, setCustomProduct] = useState('');
 
     useEffect(() => {
@@ -26,11 +28,13 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({ onProductSelect }) 
             };
             setIsLoading(true);
             setGeneratedProducts([]);
+            setError(null);
             try {
                 const products = await getProductsForIndustry(selectedIndustry);
                 setGeneratedProducts(products);
             } catch (error) {
                 console.error("Error fetching products:", error);
+                setError("Could not fetch suggestions due to an API error. This can happen if the API key is invalid or quota has been exceeded.");
             } finally {
                 setIsLoading(false);
             }
@@ -70,6 +74,12 @@ const IndustrySelector: React.FC<IndustrySelectorProps> = ({ onProductSelect }) 
             {isLoading && (
                  <div className="flex justify-center items-center h-24">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-red"></div>
+                </div>
+            )}
+
+            {error && !isLoading && (
+                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-md text-center">
+                    <p className="text-xs text-red-500">{error}</p>
                 </div>
             )}
 

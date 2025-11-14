@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
 import { Session, User as SupabaseUser } from '@supabase/supabase-js';
@@ -87,7 +86,7 @@ const App: React.FC = () => {
                 const { data: { session }, error } = await supabase.auth.getSession();
                 if (error) throw error;
                 setSession(session);
-                 if (!session) setIsLoading(false); // If no session, stop loading, show landing page
+                 if (!session) setIsLoading(false);
             } catch (error) {
                 console.error("Error fetching initial session:", error);
                 setFetchError("Could not connect to authentication service.");
@@ -99,7 +98,7 @@ const App: React.FC = () => {
 
         const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
             setSession(session);
-            if (!session) { // Handle logout
+            if (!session) {
                 setUser(null); setAllData({}); setHotLeads([]); setTransactions([]);
                 setNewClients([]); setSavedQuotes([]); setUsers([]);
             }
@@ -172,12 +171,13 @@ const App: React.FC = () => {
     const handleUpsertDayData = async (dateKey: string, data: DayData) => {
         if (!user) return;
         
-        const dataForState = { ...data, userId: data.userId || user.id };
+        const userIdForDb = data.userId || user.id;
+        const dataForState = { ...data, userId: userIdForDb };
         setAllData(prev => ({ ...prev, [dateKey]: dataForState }));
 
         const { userId, ...dataForDb } = dataForState;
         
-        await supabase.from('day_data').upsert({ user_id: userId, date: dateKey, data: dataForDb }, { onConflict: 'user_id, date' });
+        await supabase.from('day_data').upsert({ user_id: userIdForDb, date: dateKey, data: dataForDb }, { onConflict: 'user_id, date' });
     };
     
     const handleAddWin = (dateKey: string, message: string) => {
@@ -310,12 +310,14 @@ const App: React.FC = () => {
     }
 
     const renderView = () => {
-        const userEODSubmissions: EODSubmissions = Object.entries(allData).reduce((acc: EODSubmissions, [dateKey, dayData]) => {
-            if (dayData && dayData.eodSubmitted && dayData.userId) {
-                if (!acc[dayData.userId]) {
-                    acc[dayData.userId] = {};
+        const userEODSubmissions: EODSubmissions = Object.entries(allData).reduce((acc: any, [dateKey, dayData]) => {
+            const typedDayData = dayData as DayData;
+            if (typedDayData && typedDayData.eodSubmitted && typedDayData.userId) {
+                const userId = typedDayData.userId;
+                if (!acc[userId]) {
+                    acc[userId] = {};
                 }
-                acc[dayData.userId][dateKey] = true;
+                acc[userId][dateKey] = true;
             }
             return acc;
         }, {});

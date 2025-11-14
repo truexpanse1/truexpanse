@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+
+
+import React, { useState, useMemo } from 'react';
 import { Contact, CalendarEvent, formatPhoneNumber, followUpSchedule } from '../types';
 import Calendar from '../components/Calendar';
 import QuickActions from '../components/QuickActions';
 import SetAppointmentModal from '../components/SetAppointmentModal';
 import ConvertToClientModal from '../components/ConvertToClientModal';
+import DatePicker from '../components/DatePicker';
 
 interface HotLeadsPageProps {
   hotLeads: Contact[];
@@ -21,6 +24,15 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
   const [isConvertModalOpen, setIsConvertModalOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState<Contact | null>(null);
   const [expandedFollowUps, setExpandedFollowUps] = useState<string | null>(null);
+  const [filterDate, setFilterDate] = useState<string>('');
+
+  const filteredLeads = useMemo(() => {
+    const sorted = [...hotLeads].sort((a, b) => new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime());
+    if (!filterDate) {
+        return sorted;
+    }
+    return sorted.filter(lead => lead.dateAdded && lead.dateAdded.startsWith(filterDate));
+  }, [hotLeads, filterDate]);
 
   const handleLeadChange = (id: string, field: keyof Omit<Contact, 'id'>, value: string | number) => {
     const leadToUpdate = hotLeads.find(l => l.id === id);
@@ -92,9 +104,16 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
         </div>
         <div className="lg:col-span-9">
             <div className="bg-brand-light-card dark:bg-brand-navy p-6 rounded-lg border border-brand-light-border dark:border-brand-gray">
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
                 <h1 className="text-3xl font-bold text-brand-light-text dark:text-white">Hot Leads</h1>
-                <button onClick={handleAddLead} className="bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm">+ Add New Lead</button>
+                <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                        <label className="text-sm font-medium text-gray-500 dark:text-gray-400 whitespace-nowrap">Filter Date:</label>
+                        <DatePicker value={filterDate} onChange={setFilterDate} className="w-32" />
+                        {filterDate && <button onClick={() => setFilterDate('')} className="text-red-500 hover:text-red-400 font-bold text-xl" title="Clear filter">&times;</button>}
+                    </div>
+                    <button onClick={handleAddLead} className="bg-brand-lime text-brand-ink font-bold py-2 px-4 rounded-lg hover:bg-green-400 transition text-sm whitespace-nowrap">+ Add New Lead</button>
+                </div>
               </div>
               
               <div className="overflow-x-auto">
@@ -106,7 +125,7 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
                     </tr>
                   </thead>
                   <tbody>
-                    {hotLeads.map(lead => (
+                    {filteredLeads.map(lead => (
                       <React.Fragment key={lead.id}>
                       <tr className="border-b border-brand-light-border dark:border-brand-gray">
                         <td className="p-2"><input type="text" value={lead.name} onBlur={e => handleLeadChange(lead.id, 'name', e.target.value)} onChange={e => handleLeadChange(lead.id, 'name', e.target.value)} className="w-full bg-transparent p-1 focus:outline-none focus:bg-brand-light-bg dark:focus:bg-brand-gray/50 rounded dark:text-white" /></td>
@@ -119,7 +138,7 @@ const HotLeadsPage: React.FC<HotLeadsPageProps> = ({ hotLeads, onAddHotLead, onU
                       {expandedFollowUps === lead.id && (<tr><td colSpan={6} className="p-3 bg-brand-light-bg dark:bg-brand-gray/20"><h4 className="text-xs font-bold uppercase text-gray-500 dark:text-gray-400 mb-2">Follow-up Plan (Starts: {lead.appointmentDate})</h4><ul className="text-xs space-y-1">{Object.entries(followUpSchedule).map(([day, activity]) => { const isCompleted = lead.completedFollowUps && lead.completedFollowUps[parseInt(day,10)]; return (<li key={day} className={`flex items-center ${isCompleted ? 'text-gray-500 line-through' : 'text-gray-700 dark:text-gray-300'}`}><span className="font-bold w-12">Day {day}:</span><span>{activity}</span></li>)})}</ul></td></tr>)}
                       </React.Fragment>
                     ))}
-                    {hotLeads.length === 0 && (<tr><td colSpan={6} className="text-center p-8 text-gray-500 dark:text-gray-400">No hot leads yet. Add some from the Prospecting page!</td></tr>)}
+                    {filteredLeads.length === 0 && (<tr><td colSpan={6} className="text-center p-8 text-gray-500 dark:text-gray-400">{filterDate ? `No hot leads acquired on ${filterDate}.` : 'No hot leads yet. Add some from the Prospecting page!'}</td></tr>)}
                   </tbody>
                 </table>
               </div>

@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import ThemeToggle from './ThemeToggle';
+import GitHubStatus from './GitHubStatus';
 import { View, Role } from '../types';
 
 interface HeaderProps {
@@ -11,6 +12,7 @@ interface HeaderProps {
   userRole: Role;
   onLogout: () => void;
   userName: string;
+  isDemoMode: boolean;
 }
 
 const NavItem: React.FC<{ children: React.ReactNode; onClick: () => void; active?: boolean }> = ({ children, onClick, active }) => (
@@ -41,7 +43,7 @@ const Dropdown: React.FC<{ title: string; children: React.ReactNode; isOpen: boo
   </div>
 );
 
-const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, userRole, onLogout, userName }) => {
+const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, userRole, onLogout, userName, isDemoMode }) => {
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   const handleToggle = (title: string) => {
@@ -96,11 +98,17 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
                 <button onClick={onLogout} className="py-2 px-3 text-xs font-bold rounded-md transition-colors text-gray-400 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-brand-gray/50">
                     Logout
                 </button>
+                <GitHubStatus />
                 <ThemeToggle theme={theme} setTheme={setTheme} />
             </div>
           </div>
         </div>
       </div>
+      {isDemoMode && (
+        <div className="bg-yellow-400 text-black text-xs font-bold text-center py-1">
+            DEMO MODE
+        </div>
+      )}
     </header>
   );
 };

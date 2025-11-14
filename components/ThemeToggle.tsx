@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 interface ThemeToggleProps {
@@ -13,7 +14,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ theme, setTheme }) => {
   return (
     <button
       onClick={toggleTheme}
-      className="ml-4 p-2 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-brand-gray/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-light-card dark:focus:ring-offset-brand-navy focus:ring-brand-blue"
+      className="ml-2 p-2 rounded-full text-gray-400 hover:bg-gray-200 dark:hover:bg-brand-gray/50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-brand-light-card dark:focus:ring-offset-brand-navy focus:ring-brand-blue"
       aria-label="Toggle theme"
     >
       {theme === 'dark' ? (

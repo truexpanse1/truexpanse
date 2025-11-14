@@ -1,3 +1,5 @@
+
+
 import React, { useEffect } from 'react';
 import { DayData, Contact, ProspectingCode, prospectingCodes, prospectingCodeDescriptions, CalendarEvent, formatPhoneNumber, getInitialDayData } from '../types';
 import QuickActions from '../components/QuickActions';
@@ -13,11 +15,12 @@ interface ProspectingPageProps {
     selectedDate: Date;
     onDateChange: (date: Date) => void;
     onAddHotLead: (leadData: Omit<Contact, 'id'>) => Promise<Contact | null>;
-    onWin: (winMessage: string) => void;
+    onAddWin: (dateKey: string, winMessage: string) => void;
     handleSetAppointment: (appointment: { client: string, lead: string, time: string }, date: Date) => void;
+    hotLeads: Contact[];
 }
 
-const ProspectingPage: React.FC<ProspectingPageProps> = ({ allData, onDataChange, selectedDate, onDateChange, onAddHotLead, onWin, handleSetAppointment }) => {
+const ProspectingPage: React.FC<ProspectingPageProps> = ({ allData, onDataChange, selectedDate, onDateChange, onAddHotLead, onAddWin, handleSetAppointment, hotLeads }) => {
 
     const getDateKey = (date: Date): string => date.toISOString().split('T')[0];
     const currentDateKey = getDateKey(selectedDate);
@@ -29,11 +32,11 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({ allData, onDataChange
         const callsMade = contacts.filter(c => c.prospecting.SW || c.prospecting.NA || c.prospecting.LM).length;
 
         if (callsMade >= 30 && !currentData.milestones.calls30Achieved) {
-            onWin('Accomplished 30 daily calls!');
+            onAddWin(currentDateKey, 'Accomplished 30 daily calls!');
             const dayData = allData[currentDateKey] || getInitialDayData();
             onDataChange(currentDateKey, { ...dayData, milestones: { ...dayData.milestones, calls30Achieved: true } });
         }
-    }, [currentData.prospectingContacts, currentDateKey, onWin, onDataChange, allData, currentData.milestones.calls30Achieved]);
+    }, [currentData.prospectingContacts, currentDateKey, onAddWin, onDataChange, allData, currentData.milestones.calls30Achieved]);
 
     const updateCurrentData = (updates: Partial<DayData>) => {
         const updatedData = { ...(allData[currentDateKey] || getInitialDayData()), ...updates };
@@ -49,10 +52,32 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({ allData, onDataChange
 
     const handleProspectingChange = (contactIndex: number, code: ProspectingCode) => {
         const newContacts = [...currentData.prospectingContacts];
-        const contact = newContacts[contactIndex];
-        const newProspecting = { ...contact.prospecting, [code]: !contact.prospecting[code] };
+        const contact = { ...newContacts[contactIndex] };
+        const isBeingChecked = !contact.prospecting[code];
+
+        const newProspecting = { ...contact.prospecting, [code]: isBeingChecked };
         newContacts[contactIndex] = { ...contact, prospecting: newProspecting };
         updateCurrentData({ prospectingContacts: newContacts });
+
+        if (code === 'SA' && isBeingChecked && contact.name) {
+            const isAlreadyHot = hotLeads.some(lead => 
+                (lead.name && lead.name === contact.name) &&
+                (lead.phone && lead.phone === contact.phone) &&
+                (lead.email && lead.email === contact.email)
+            );
+
+            if (!isAlreadyHot) {
+                onAddHotLead({
+                    ...contact,
+                    dateAdded: new Date().toISOString(),
+                    completedFollowUps: {}
+                }).then(newLead => {
+                    if (newLead) {
+                        onAddWin(currentDateKey, `Added ${contact.name} to Hot Leads.`);
+                    }
+                });
+            }
+        }
     };
     
     const handleCSVImport = (importedData: Array<Partial<Contact>>) => {
@@ -122,7 +147,8 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({ allData, onDataChange
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
              <div className="space-y-8">
                 <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
-                <ProspectingKPIs contacts={currentData.prospectingContacts} />
+                {/* FIX: Pass 'events' prop to ProspectingKPIs to satisfy its required props. */}
+                <ProspectingKPIs contacts={currentData.prospectingContacts} events={currentData.events} />
                 <QuickActions onSetAppointment={handleQuickSetAppointment} onAddToHotLeads={handleQuickAddToHotLeads} />
             </div>
             <div className="lg:col-span-2">

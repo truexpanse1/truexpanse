@@ -4,22 +4,16 @@ import { Goal } from '../types';
 interface GoalsBlockProps {
     title: string;
     goals: Goal[];
-    onGoalChange: (goal: Goal) => void;
-    onGoalComplete?: (goal: Goal) => void;
+    onGoalChange: (goal: Goal, isCompletion: boolean) => void;
     highlight?: boolean;
 }
 
-const GoalsBlock: React.FC<GoalsBlockProps> = ({ title, goals, onGoalChange, onGoalComplete, highlight }) => {
+const GoalsBlock: React.FC<GoalsBlockProps> = ({ title, goals, onGoalChange, highlight }) => {
     
     const handleCompletionToggle = (goal: Goal) => {
-        const wasCompleted = goal.completed;
-        const updatedGoal = { ...goal, completed: !goal.completed };
-        onGoalChange(updatedGoal);
-
-        // Only trigger onGoalComplete when marking as complete for the first time
-        if (!wasCompleted && updatedGoal.completed && onGoalComplete) {
-            onGoalComplete(updatedGoal);
-        }
+        const isCompleting = !goal.completed;
+        const updatedGoal = { ...goal, completed: isCompleting };
+        onGoalChange(updatedGoal, isCompleting);
     };
     
     return (
@@ -32,12 +26,12 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({ title, goals, onGoalChange, onG
                             type="checkbox"
                             checked={goal.completed}
                             onChange={() => handleCompletionToggle(goal)}
-                            className="h-5 w-5 rounded bg-brand-light-border dark:bg-brand-gray border-gray-300 dark:border-gray-600 text-brand-lime focus:ring-brand-lime"
+                            className="h-5 w-5 rounded accent-brand-blue focus:ring-brand-blue border-gray-300 dark:border-gray-600 bg-brand-light-border dark:bg-brand-gray"
                         />
                         <input 
                             type="text" 
                             value={goal.text}
-                            onChange={(e) => onGoalChange({ ...goal, text: e.target.value })}
+                            onChange={(e) => onGoalChange({ ...goal, text: e.target.value }, false)}
                             className={`w-full bg-transparent border-b border-dashed border-brand-light-border dark:border-brand-gray text-brand-light-text dark:text-white text-sm p-1 focus:outline-none focus:border-brand-blue focus:border-solid ${goal.completed ? 'line-through text-gray-500' : ''}`} 
                         />
                     </div>
