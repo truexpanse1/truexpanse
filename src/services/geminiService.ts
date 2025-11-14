@@ -1,18 +1,25 @@
-import { GoogleGenAI, Type, Modality } from "@google/genai";
-import { Quote, Book } from '../types';
+import { GoogleGenerativeAI, Type, Modality } from "@google/generative-ai";
+import { Quote, Book } from "../types";
 
-const geminiApiKey = process.env.VITE_GEMINI_API_KEY || 'placeholder-gemini-key';
+// Load API key from Vite environment variables
+// WARNING: Do not share code with API keys.
+const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-if (geminiApiKey === 'placeholder-gemini-key') {
-    console.warn(`
-    ********************************************************************************
-    ** WARNING: Gemini API key is not set!                                          **
-    ** AI features may not work. Please set the VITE_GEMINI_API_KEY env variable.   **
-    ********************************************************************************
-    `);
+// Warn if missing
+if (!geminiApiKey) {
+  console.warn(`
+************************************************************
+** WARNING: Gemini API key is not set!
+** AI features may not work. Please set VITE_GEMINI_API_KEY.
+************************************************************
+  `);
 }
 
-const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+// Create the Gemini client
+const ai = new GoogleGenerativeAI({ apiKey: geminiApiKey });
+
+
+
 
 const parseJsonResponse = <T>(text: string, fallback: T): T => {
     try {
