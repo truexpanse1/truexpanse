@@ -37,6 +37,7 @@ import ChatIcon from '../components/ChatIcon';
 import ChatBot from '../components/ChatBot';
 import Confetti from '../components/Confetti';
 
+
 const isDemoMode = false; // Always false for production
 
 const FullPageError: React.FC<{ message: string; onRetry: () => void }> = ({
