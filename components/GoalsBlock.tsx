@@ -22,12 +22,27 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({ title, goals, onGoalChange, hig
             <div className="space-y-2">
                 {goals.map((goal) => (
                     <div key={goal.id} className="flex items-center space-x-3">
-                         <input
-                            type="checkbox"
-                            checked={goal.completed}
-                            onChange={() => handleCompletionToggle(goal)}
-                            className="h-5 w-5 rounded border-gray-300 dark:border-gray-600 text-blue-600 focus:ring-blue-500 focus:ring-2"
-                        />
+                        <div className="relative flex items-center">
+                            <input
+                                type="checkbox"
+                                checked={goal.completed}
+                                onChange={() => handleCompletionToggle(goal)}
+                                className="peer h-5 w-5 cursor-pointer appearance-none rounded border-2 border-gray-300 dark:border-gray-600 checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
+                            />
+                            {/* Custom checkmark SVG that appears when checked */}
+                            <svg
+                                className="absolute w-5 h-5 pointer-events-none hidden peer-checked:block text-white"
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="3"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                        </div>
                         <input 
                             type="text" 
                             value={goal.text}
