@@ -94,7 +94,8 @@ const Header: React.FC<HeaderProps> = ({ theme, setTheme, setView, currentView, 
               </button>
             </nav>
             <div className="flex items-center ml-4">
-                <span className="hidden sm:inline text-sm text-gray-500 dark:text-gray-400 mr-3">Welcome, {userName.split(' ')[0]}</span>
+                <span className="hidden sm:inline text-sm text-gray-500 dark:text-gray-400 mr-3">Welcome, {userName?.split(' ')[0] || ""}
+</span>
                 <button onClick={onLogout} className="py-2 px-3 text-xs font-bold rounded-md transition-colors text-gray-400 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-brand-gray/50">
                     Logout
                 </button>
