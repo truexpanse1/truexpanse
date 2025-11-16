@@ -177,7 +177,13 @@ const App: React.FC = () => {
 
         const { userId, ...dataForDb } = dataForState;
         
-        await supabase.from('day_data').upsert({ user_id: userId, date: dateKey, data: dataForDb }, { onConflict: 'user_id, date' });
+        // FIX #2: Added error handling to catch database save failures
+        const { error } = await supabase.from('day_data').upsert({ user_id: userId, date: dateKey, data: dataForDb }, { onConflict: 'user_id, date' });
+        
+        if (error) {
+            console.error('Error saving day data to database:', error);
+            // Optionally show user notification here
+        }
     };
     
     const handleAddWin = (dateKey: string, message: string) => {
@@ -262,7 +268,8 @@ const App: React.FC = () => {
         handleUpsertDayData(dateKey, { ...dayData, events });
         const todayDateKey = new Date().toISOString().split('T')[0];
         handleAddWin(todayDateKey, `Appointment Set: ${appointment.client}`);
-        setView('month-view');
+        // FIX #1: Removed auto-navigation - user stays on current page after setting appointment
+        // setView('month-view');
         setSelectedDate(date);
     };
 
