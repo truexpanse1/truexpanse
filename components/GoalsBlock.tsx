@@ -26,7 +26,7 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({ title, goals, onGoalChange, hig
                             type="checkbox"
                             checked={goal.completed}
                             onChange={() => handleCompletionToggle(goal)}
-                            className="h-5 w-5 rounded accent-brand-blue focus:ring-brand-blue border-gray-300 dark:border-gray-600 bg-brand-light-border dark:bg-brand-gray"
+                            className="h-5 w-5 rounded border-gray-300 dark:border-gray-600 text-brand-blue focus:ring-brand-blue focus:ring-2"
                         />
                         <input 
                             type="text" 
