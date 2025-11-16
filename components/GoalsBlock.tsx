@@ -23,12 +23,18 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({ title, goals, onGoalChange, hig
                 {goals.map((goal) => (
                     <div key={goal.id} className="flex items-center space-x-3">
                         <div className="relative flex items-center">
-                            <input
-                                type="checkbox"
-                                checked={goal.completed}
-                                onChange={() => handleCompletionToggle(goal)}
-                                className="peer h-5 w-5 cursor-pointer appearance-none rounded border-2 border-gray-300 dark:border-gray-600 checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-1"
-                            />
+<input
+    type="checkbox"
+    checked={goal.completed}
+    onChange={() => handleCompletionToggle(goal)}
+    style={{
+        width: '20px',
+        height: '20px',
+        cursor: 'pointer',
+        accentColor: '#2563eb'  // Blue color
+    }}
+/>
+
                             {/* Custom checkmark SVG that appears when checked */}
                             <svg
                                 className="absolute w-5 h-5 pointer-events-none hidden peer-checked:block text-white"
