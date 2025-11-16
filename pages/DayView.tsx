@@ -138,6 +138,7 @@ const DayView: React.FC<DayViewProps> = ({ allData, onDataChange, selectedDate, 
     }
 };
 
+
     
     const handleSaveNewLead = async (leadData: Omit<Contact, 'id' | 'date' | 'prospecting' | 'dateAdded' | 'completedFollowUps'>) => {
         const newHotLead = {
