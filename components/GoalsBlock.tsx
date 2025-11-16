@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Goal } from '../types';
 
 interface GoalsBlockProps {
@@ -9,36 +9,14 @@ interface GoalsBlockProps {
 }
 
 const GoalsBlock: React.FC<GoalsBlockProps> = ({ title, goals, onGoalChange, highlight }) => {
-    // Local copy so UI updates instantly
-    const [localGoals, setLocalGoals] = useState<Goal[]>(goals);
-
-    // Keep local state in sync when parent data changes (e.g. new day, load from DB)
-    useEffect(() => {
-        setLocalGoals(goals);
-    }, [goals]);
-
     const handleCompletionToggle = (goal: Goal) => {
         const isCompleting = !goal.completed;
         const updatedGoal = { ...goal, completed: isCompleting };
-
-        // Update local UI
-        setLocalGoals(prev =>
-            prev.map(g => (g.id === goal.id ? updatedGoal : g))
-        );
-
-        // Tell parent so it can save + trigger confetti/wins
         onGoalChange(updatedGoal, isCompleting);
     };
 
     const handleTextChange = (goal: Goal, text: string) => {
         const updatedGoal = { ...goal, text };
-
-        // Update local UI
-        setLocalGoals(prev =>
-            prev.map(g => (g.id === goal.id ? updatedGoal : g))
-        );
-
-        // Tell parent, but not a "completion" change
         onGoalChange(updatedGoal, false);
     };
 
@@ -52,7 +30,7 @@ const GoalsBlock: React.FC<GoalsBlockProps> = ({ title, goals, onGoalChange, hig
                 {title}
             </h3>
             <div className="space-y-2">
-                {localGoals.map((goal) => (
+                {goals.map((goal) => (
                     <div key={goal.id} className="flex items-center space-x-3">
                         <div className="relative flex items-center">
                             <input
