@@ -15,7 +15,7 @@ const AIChallengeCard: React.FC<AIChallengeCardProps> = ({ data, isLoading, onAc
 
     useEffect(() => {
         const fetchQuote = async () => {
-            if (!data.quote) {
+            (!data?.quote) {
                 setIsQuoteLoading(true);
                 try {
                     // This function is defined in geminiService.ts and fetches a quote
@@ -30,8 +30,7 @@ const AIChallengeCard: React.FC<AIChallengeCardProps> = ({ data, isLoading, onAc
             }
         };
         // fetchQuote(); // This would need a proper state management passed in
-    }, [data.quote]);
-    
+[data?.quote])    
     // Fallback quote if fetching fails or is disabled
     const displayQuote = data?.quote || { text: 'The secret of getting ahead is getting started.', author: 'Mark Twain' };
     return (
