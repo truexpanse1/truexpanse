@@ -131,68 +131,51 @@ const LandingPage: React.FC = () => {
 
         <main>
           {/* Hero Section */}
-          <section
-            className="relative py-20 sm:py-28 border-b border-brand-light-border dark:border-brand-gray"
-            style={{
-              backgroundImage: "url('/ai-background.png')",
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-            }}
-          >
-            <div className="absolute inset-0 bg-brand-ink/70" />
-            <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="grid md:grid-cols-2 gap-12 items-center">
-                {/* Left: Copy */}
-                <div className="text-white">
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/20 uppercase tracking-wide mb-4">
-                    Massive Action Tracker (MAT)
-                  </span>
-                  <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black tracking-tight leading-tight drop-shadow-xl">
-                    Never Let Your Sales Pipeline Run Dry Again.
-                  </h1>
-                  <p className="mt-4 text-base sm:text-lg text-gray-200 font-medium max-w-xl">
-                    MAT turns your daily calls, texts, emails, appointments, and revenue into a clear picture of where
-                    you are and what to do next—whether you’re a solo closer or leading a growing sales team.
-                  </p>
-                  <ul className="mt-5 space-y-2 text-sm sm:text-base text-gray-200">
-                    <li>• Track every KPI in one simple day view.</li>
-                    <li>• See pipeline, appointments, and revenue by day, week, and month.</li>
-                    <li>• Give managers a live dashboard of each rep’s EOD performance.</li>
-                  </ul>
-                  <div className="mt-8 flex flex-wrap gap-4">
-                    <a
-                      href="#pricing"
-                      onClick={handleNavClick}
-                      className="bg-brand-red text-white font-bold py-3 px-7 rounded-lg hover:bg-red-700 transition-transform transform hover:scale-105 inline-flex items-center shadow-lg"
-                    >
-                      Get Started with MAT
-                    </a>
-                    <a
-                      href="#features"
-                      onClick={handleNavClick}
-                      className="border border-white/60 text-white font-semibold py-3 px-6 rounded-lg hover:bg-white/10 inline-flex items-center text-sm sm:text-base"
-                    >
-                      See How It Works
-                    </a>
-                  </div>
-                  <p className="mt-4 text-xs sm:text-sm text-gray-300">
-                    Built by a 10X sales coach who’s helped reps and teams track the activity, pipeline, and mindset it
-                    takes to win.
-                  </p>
-                </div>
+          <section className="relative py-24 sm:py-32 px-4 border-b border-brand-light-border dark:border-brand-gray bg-brand-ink">
+            <div className="max-w-4xl mx-auto text-center">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-white/10 border border-white/20 uppercase tracking-wide text-gray-200">
+                Massive Action Tracker (MAT)
+              </span>
 
-                {/* Right: App visual */}
-                <div className="flex justify-center md:justify-end">
-                  <div className="relative">
-                    <div className="absolute -inset-6 bg-black/40 blur-3xl rounded-[2.5rem]" />
-                    <img
-                      src="/ipadwApp.png"
-                      alt="Massive Action Tracker app on tablet"
-                      className="relative rounded-[2.5rem] shadow-2xl border border-white/20"
-                    />
-                  </div>
-                </div>
+              <h1 className="mt-6 text-4xl sm:text-6xl font-black tracking-tight leading-tight text-white">
+                Never Let Your Sales Pipeline
+                <br className="hidden sm:block" />
+                Run Dry Again.
+              </h1>
+
+              <p className="mt-6 text-lg sm:text-xl text-gray-300 font-medium max-w-3xl mx-auto leading-relaxed">
+                MAT turns your daily calls, texts, emails, appointments, and revenue into a clear picture of where you
+                are and what to do next — whether you’re a solo closer or leading a growing sales team.
+              </p>
+
+              <ul className="mt-8 space-y-3 text-base sm:text-lg text-gray-300 max-w-2xl mx-auto">
+                <li>• Track every KPI in one simple day view.</li>
+                <li>• See pipeline, appointments, and revenue by day, week, and month.</li>
+                <li>• Give managers a live dashboard of each rep’s EOD performance.</li>
+              </ul>
+
+              <div className="mt-10 flex flex-wrap justify-center gap-4">
+                <a
+                  href="#pricing"
+                  onClick={handleNavClick}
+                  className="bg-brand-red text-white font-bold py-3 px-8 rounded-lg hover:bg-red-700 transition-transform transform hover:scale-105 inline-flex items-center shadow-lg text-lg"
+                >
+                  Get Started with MAT
+                </a>
+
+                <a
+                  href="#features"
+                  onClick={handleNavClick}
+                  className="border border-white/40 text-white font-semibold py-3 px-7 rounded-lg hover:bg-white/10 inline-flex items-center text-lg"
+                >
+                  See How It Works
+                </a>
               </div>
+
+              <p className="mt-6 text-xs sm:text-sm text-gray-400">
+                Built by a 10X sales coach who’s helped reps and teams track the activity, pipeline, and mindset it
+                takes to win.
+              </p>
             </div>
           </section>
 
