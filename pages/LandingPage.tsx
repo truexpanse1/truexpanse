@@ -21,19 +21,33 @@ const PricingCard: React.FC<{
   isFeatured?: boolean;
   priceId: string;
 }> = ({ plan, price, description, features, isFeatured, priceId }) => {
-  const handleCheckout = async () => {
-    try {
-      const res = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId }),
-      });
-      const { url } = await res.json();
-      window.location.href = url;
-    } catch (err) {
-      alert('Checkout failed – please try again');
+ const handleCheckout = async () => {
+  const email = prompt('Enter your email to start your 7-day free trial (card required):');
+
+  // Validate email
+  if (!email || !email.includes('@') || !email.includes('.')) {
+    alert('Please enter a valid email – this is how you’ll log in');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ priceId, email }), // ← now sending email too
+    });
+
+    const data = await res.json();
+
+    if (data.url) {
+      window.location.href = data.url; // sends them to Stripe Checkout
+    } else {
+      alert('Something went wrong. Please try again.');
     }
-  };
+  } catch (err) {
+    alert('Checkout failed – please try again');
+  }
+};
 
   return (
     <div
