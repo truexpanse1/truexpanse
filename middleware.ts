@@ -1,13 +1,22 @@
-// middleware.ts (must be in the root of the project)
+// middleware.ts (root of project)
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+// This runs on normal pages but NOT on /api routes because of the matcher below
 export function middleware(request: NextRequest) {
-  // Let everything pass through untouched (including all /api routes)
   return NextResponse.next();
 }
 
-// THIS IS THE ONLY LINE THAT MATTERS — it excludes /api routes from middleware
+// THIS LINE IS THE FIX – tells Vercel to completely ignore /api routes
 export const config = {
-  matcher: '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - api routes
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+  ],
 };
