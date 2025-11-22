@@ -8,6 +8,7 @@ export function middleware(request: NextRequest) {
 }
 
 // THIS LINE IS CRITICAL – it stops middleware from running on API routes
+// THIS LINE IS CRITICAL – it stops middleware from running on API routes
 export const config = {
   matcher: '/((?!api|_next/static|_next/image|favicon.ico).*)',
 };
