@@ -1,4 +1,5 @@
-// app/api/create-checkout-session/route.ts
+export const dynamic = 'force-dynamic';
+
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
@@ -21,13 +22,20 @@ export const POST = async (request: Request) => {
       customer_email: email,
       subscription_data: {
         trial_period_days: 7,
+        trial_settings: {
+          end_behavior: { missing_payment_method: 'cancel' },
+        },
       },
       success_url: `${new URL(request.url).origin}/trial-success`,
       cancel_url: `${new URL(request.url).origin}/#pricing`,
+      metadata: { note: '7-day card-upfront trial' },
     });
 
     return NextResponse.json({ url: session.url });
   } catch (error: any) {
-    return new NextResponse(error.message, { status: 500 });
+    console.error('Stripe checkout error:', error);
+    return new NextResponse(error.message || 'Internal server error', {
+      status: 500,
+    });
   }
 };
