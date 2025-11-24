@@ -14,7 +14,7 @@ export default function LandingPage() {
           <p className="text-xl text-gray-400">Join thousands of sales teams crushing their goals</p>
         </div>
 
-<form action="/api/trial" method="POST" className="space-y-8 bg-zinc-900/50 p-10 rounded-2xl border border-zinc-800">          {/* Company Information */}
+        <form action="/api/trial" method="POST" className="space-y-8 bg-zinc-900/50 p-10 rounded-2xl border border-zinc-800">
           <div className="space-y-6">
             <h3 className="text-2xl font-semibold">Company Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -29,7 +29,6 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Personal Information */}
           <div className="space-y-6">
             <h3 className="text-2xl font-semibold">Your Information</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -51,4 +50,4 @@ export default function LandingPage() {
       </main>
     </div>
   )
-}correct 7-day trial landing page
+} final: correct 7-day trial homepage
