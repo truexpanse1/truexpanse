@@ -174,4 +174,4 @@ const handleGoalChange = (
   if (isCompletion && updatedGoal.text.trim() !== '') {
     onAddWin(currentDateKey, `Target Completed: ${updatedGoal.text}`);
   }
-}; // 👈 this was missing
+};
