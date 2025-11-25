@@ -159,16 +159,19 @@ const DayView: React.FC<DayViewProps> = ({
     }
   };
 
-  const handleGoalChange = (
-    type: 'topTargets' | 'massiveGoals',
-    updatedGoal: Goal,
-    isCompletion: boolean,
-  ) => {
-    const goals = currentData[type] || [];
-    const newGoals = goals.map((g) => (g.id === updatedGoal.id ? updatedGoal : g));
+const handleGoalChange = (
+  type: 'topTargets' | 'massiveGoals',
+  updatedGoal: Goal,
+  isCompletion: boolean,
+) => {
+  const goals = currentData[type] || [];
+  const newGoals = goals.map((g) =>
+    g.id === updatedGoal.id ? updatedGoal : g,
+  );
 
-    updateCurrentData({ [type]: newGoals });
+  updateCurrentData({ [type]: newGoals });
 
-if (isCompletion && updatedGoal.text.trim() !== '') {
-  onAddWin(currentDateKey, `Target Completed: ${updatedGoal.text}`);
-}
+  if (isCompletion && updatedGoal.text.trim() !== '') {
+    onAddWin(currentDateKey, `Target Completed: ${updatedGoal.text}`);
+  }
+}; // 👈 this was missing
