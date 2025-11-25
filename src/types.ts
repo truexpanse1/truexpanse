@@ -173,29 +173,52 @@ export interface DayData {
 }
 
 export const getInitialDayData = (): DayData => ({
-    revenue: { today: '', week: '', month: '', ytd: '', mcv: '', acv: '' },
-    prospectingBlock: '',
-    events: [],
-    followUpBlock: '',
-    winsToday: [],
-    topTargets: Array.from({ length: 6 }, (_, i) => ({ id: `top-${i}-${Date.now()}`, text: '', completed: false })),
-    massiveGoals: Array.from({ length: 6 }, (_, i) => ({ id: `massive-${i}-${Date.now()}`, text: '', completed: false })),
-    aiChallenge: {
-        quote: null,
-        challenges: [],
-        challengesAccepted: false,
-        completedChallenges: [],
-    },
-    prospectingContacts: Array.from({ length: 200 }, (_, i) => ({
-        id: `contact-${i}-${Date.now()}`,
-        name: '', date: '', phone: '', email: '', interestLevel: 5, prospecting: {}
-    })),
-    milestones: {
-      calls30Achieved: false,
-    },
-    talkTime: '',
-    eodSubmitted: false,
+  revenue: { today: '', week: '', month: '', ytd: '', mcv: '', acv: '' },
+  prospectingBlock: '',
+  events: [],
+  followUpBlock: '',
+  winsToday: [],
+
+  // 🔥 FIXED: Stable IDs for Top Targets
+  topTargets: Array.from({ length: 6 }, (_, i) => ({
+    id: `top-${i + 1}`,
+    text: '',
+    completed: false,
+  })),
+
+  // 🔥 FIXED: Stable IDs for Massive Goals
+  massiveGoals: Array.from({ length: 6 }, (_, i) => ({
+    id: `massive-${i + 1}`,
+    text: '',
+    completed: false,
+  })),
+
+  aiChallenge: {
+    quote: null,
+    challenges: [],
+    challengesAccepted: false,
+    completedChallenges: [],
+  },
+
+  // 🔥 FIXED: DO NOT USE Date.now() for contacts either
+  prospectingContacts: Array.from({ length: 200 }, (_, i) => ({
+    id: `contact-${i + 1}`,
+    name: '',
+    date: '',
+    phone: '',
+    email: '',
+    interestLevel: 5,
+    prospecting: {},
+  })),
+
+  milestones: {
+    calls30Achieved: false,
+  },
+
+  talkTime: '',
+  eodSubmitted: false,
 });
+
 
 
 //
