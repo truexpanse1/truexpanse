@@ -169,5 +169,6 @@ const DayView: React.FC<DayViewProps> = ({
 
     updateCurrentData({ [type]: newGoals });
 
-    if (isCompletion && updatedGoal.text.trim() !== '') {
-      onAddWin(currentDateKey, `Target
+if (isCompletion && updatedGoal.text.trim() !== '') {
+  onAddWin(currentDateKey, `Target Completed: ${updatedGoal.text}`);
+}
