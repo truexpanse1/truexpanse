@@ -1,34 +1,68 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { supabase } from '../services/supabaseClient';
 
 const LandingPage: React.FC = () => {
+  const [showLogin, setShowLogin] = useState(false);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const [loginError, setLoginError] = useState<string | null>(null);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoggingIn(true);
+    setLoginError(null);
+
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: loginPassword,
+      });
+
+      if (error) {
+        setLoginError(error.message);
+        setIsLoggingIn(false);
+        return;
+      }
+
+      // Let App.tsx pick up the new session and route user into the app
+      window.location.reload();
+    } catch (err: any) {
+      setLoginError(err?.message || 'Unexpected error logging in.');
+      setIsLoggingIn(false);
+    }
+  };
+
+  const openLogin = () => {
+    setShowLogin(true);
+    setLoginError(null);
+  };
+
   return (
-    <div className="min-h-screen bg-[#050111] text-white">
-      {/* Top Nav */}
-      <header className="sticky top-0 z-30 bg-[#050111]/80 backdrop-blur border-b border-white/10">
-        <div className="max-w-6xl mx-auto px-4 lg:px-0 flex items-center justify-between h-16">
+    <div className="min-h-screen bg-[#050316] text-white">
+      {/* Top navigation */}
+      <header className="sticky top-0 z-20 bg-[#050316]/80 backdrop-blur border-b border-white/5">
+        <div className="max-w-6xl mx-auto flex items-center justify-between px-6 py-4">
+          {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-red-500 via-pink-500 to-purple-500 flex items-center justify-center text-xs font-black">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-br from-fuchsia-500 to-cyan-400 flex items-center justify-center text-xs font-black tracking-tight">
               MAT
             </div>
             <div className="leading-tight">
-              <div className="text-sm font-semibold tracking-[0.18em] uppercase text-white/80">
+              <div className="text-sm font-semibold tracking-[0.18em] uppercase text-fuchsia-400">
                 TRUEXPANSE
               </div>
-              <div className="text-xs text-white/50 -mt-0.5">
-                Massive Action Tracker
-              </div>
+              <div className="text-lg font-bold">Massive Action Tracker</div>
             </div>
           </div>
 
+          {/* Nav + Login */}
           <nav className="hidden md:flex items-center gap-8 text-sm text-white/70">
-            <a href="#product" className="hover:text-white transition">
-              Product
+            <a href="#tools" className="hover:text-white transition">
+              Tools
             </a>
-            <a href="#results" className="hover:text-white transition">
-              Results
-            </a>
-            <a href="#how-it-works" className="hover:text-white transition">
-              How it works
+            <a href="#proof" className="hover:text-white transition">
+              Proof
             </a>
             <a href="#pricing" className="hover:text-white transition">
               Pricing
@@ -36,17 +70,16 @@ const LandingPage: React.FC = () => {
           </nav>
 
           <div className="flex items-center gap-3">
-            {/* Existing accounts login */}
-            <a
-              href="/login"
-              className="px-4 py-2 rounded-full text-sm font-medium border border-white/20 hover:border-white/60 hover:bg-white/5 transition"
+            <button
+              type="button"
+              onClick={openLogin}
+              className="hidden sm:inline-flex px-4 py-2 rounded-full text-sm font-medium border border-white/20 hover:border-white/60 hover:bg-white/5 transition"
             >
               Login
-            </a>
-            {/* Trial CTA – adjust href if you have a dedicated signup route */}
+            </button>
             <a
               href="#pricing"
-              className="hidden sm:inline-flex px-4 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-purple-500 via-fuchsia-500 to-red-500 shadow-lg shadow-purple-500/40 hover:brightness-110 transition"
+              className="px-4 sm:px-6 py-2 rounded-full text-sm font-semibold bg-gradient-to-r from-fuchsia-500 to-indigo-500 shadow-lg shadow-fuchsia-500/40 hover:shadow-fuchsia-500/70 transition"
             >
               Start 7-Day Free Trial
             </a>
@@ -54,362 +87,364 @@ const LandingPage: React.FC = () => {
         </div>
       </header>
 
-      <main>
-        {/* HERO SECTION */}
-        <section className="relative overflow-hidden">
-          <div className="pointer-events-none absolute -left-40 -top-40 h-80 w-80 rounded-full bg-purple-600/40 blur-3xl" />
-          <div className="pointer-events-none absolute -right-40 top-40 h-80 w-80 rounded-full bg-fuchsia-500/30 blur-3xl" />
+      {/* Main content */}
+      <main className="max-w-6xl mx-auto px-6 pb-24">
+        {/* HERO */}
+        <section className="pt-16 pb-20 lg:pt-20">
+          <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-fuchsia-500/40 bg-fuchsia-500/10 text-xs font-semibold tracking-[0.2em] uppercase text-fuchsia-200 mb-6">
+            <span className="text-lg">⚡</span>
+            <span>New AI-powered sales OS for closers</span>
+          </div>
 
-          <div className="max-w-6xl mx-auto px-4 lg:px-0 py-16 lg:py-24 grid lg:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-12 items-center">
+          <h1 className="text-4xl sm:text-5xl lg:text-[3.6rem] font-black leading-tight tracking-tight mb-5">
+            Slash pipeline anxiety and<br className="hidden sm:block" />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-cyan-400 to-indigo-500">
+              10X your sales activity
+            </span>{' '}
+            in 30 days.
+          </h1>
+
+          <p className="text-base sm:text-lg text-white/70 max-w-2xl mb-8">
+            Massive Action Tracker (MAT) is your daily command center: track every call,
+            text, email, demo, dollar, and win — while AI helps you prospect, follow-up,
+            and stay on attack all day long.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-4 mb-6">
+            <a
+              href="#pricing"
+              className="px-6 py-3 rounded-full font-semibold bg-gradient-to-r from-fuchsia-500 to-indigo-500 shadow-lg shadow-fuchsia-500/40 hover:shadow-fuchsia-500/70 transition"
+            >
+              Start Free • 7-Day Trial
+            </a>
+            <button
+              type="button"
+              onClick={openLogin}
+              className="text-sm text-white/70 hover:text-white underline-offset-4 hover:underline"
+            >
+              Already a customer? Login
+            </button>
+          </div>
+
+          <p className="text-xs sm:text-sm text-white/50">
+            No contracts • Cancel anytime • Built for sales killers, teams, and coaches.
+          </p>
+        </section>
+
+        {/* TOOL / BENEFITS */}
+        <section id="tools" className="py-16 border-t border-white/5">
+          <div className="grid md:grid-cols-2 gap-10 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-400/50 bg-purple-500/10 text-[11px] font-medium uppercase tracking-[0.2em] text-purple-200 mb-6">
-                ⚡ New • Built for 10X sales teams
-              </div>
-
-              <h1 className="text-4xl sm:text-5xl lg:text-[3.3rem] font-black leading-tight mb-4">
-                Turn a messy sales day into a
-                <span className="inline-block ml-2 px-3 py-1 rounded-full bg-white text-[#050111] text-2xl align-middle">
-                  10X pipeline
-                </span>
-              </h1>
-
-              <p className="text-lg text-white/65 max-w-xl mb-6">
-                Massive Action Tracker (MAT) gives every rep a crystal-clear
-                scoreboard for calls, texts, meetings, and revenue — and gives
-                leaders real-time visibility on who’s actually moving the needle.
-              </p>
-
-              <ul className="text-sm text-white/70 space-y-2 mb-8">
-                <li>• Track all KPIs: calls, appointments, demos, deals, and revenue</li>
-                <li>• See pipeline health at a glance — today, this week, this month</li>
-                <li>• Built-in coaching prompts to keep reps taking massive action</li>
-              </ul>
-
-              <div className="flex flex-wrap items-center gap-4">
-                <a
-                  href="#pricing"
-                  className="px-6 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-500 via-fuchsia-500 to-red-500 shadow-lg shadow-purple-500/40 hover:brightness-110 transition"
-                >
-                  Start 7-Day Free Trial
-                </a>
-                <a
-                  href="#results"
-                  className="text-sm font-medium text-white/75 hover:text-white underline-offset-4 hover:underline"
-                >
-                  See live-style results ↓
-                </a>
-              </div>
-
-              <p className="text-xs text-white/40 mt-4">
-                No contracts • Cancel anytime • Designed by a 10X sales coach
-              </p>
-            </div>
-
-            {/* Mock “app preview” card */}
-            <div className="relative">
-              <div className="rounded-3xl bg-white/5 border border-white/10 p-5 shadow-[0_0_60px_rgba(168,85,247,0.35)]">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <div className="text-xs uppercase tracking-[0.2em] text-white/50">
-                      TODAY&apos;S DASHBOARD
-                    </div>
-                    <div className="text-sm text-white/80">Nov 24 • Don’s Team</div>
-                  </div>
-                  <div className="px-3 py-1 text-xs rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/40">
-                    🔥 On-track for goal
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 text-xs mb-4">
-                  {[
-                    { label: 'Calls', value: '47', target: '40' },
-                    { label: 'Appointments', value: '9', target: '8' },
-                    { label: 'Demos', value: '4', target: '3' },
-                    { label: 'Deals Closed', value: '3', target: '2' },
-                  ].map((kpi) => (
-                    <div
-                      key={kpi.label}
-                      className="rounded-2xl bg-white/5 border border-white/10 px-3 py-2"
-                    >
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-[11px] text-white/60">{kpi.label}</span>
-                        <span className="text-[10px] text-emerald-300">Goal {kpi.target}</span>
-                      </div>
-                      <div className="text-lg font-bold">{kpi.value}</div>
-                      <div className="mt-1 h-1.5 rounded-full bg-white/10 overflow-hidden">
-                        <div className="h-full w-3/4 bg-gradient-to-r from-purple-500 to-emerald-400" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="rounded-2xl bg-[#050111] border border-white/10 px-3 py-3">
-                  <div className="flex justify-between items-center text-xs text-white/70 mb-2">
-                    <span>Massive Action Score</span>
-                    <span className="text-emerald-300 font-semibold">92 / 100</span>
-                  </div>
-                  <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-                    <div className="h-full w-[92%] bg-gradient-to-r from-red-500 via-fuchsia-500 to-emerald-400" />
-                  </div>
-                  <p className="text-[11px] text-white/55 mt-2">
-                    Reps above 80 consistently hit quota. MAT keeps them there.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* RESULTS SECTION */}
-        <section id="results" className="bg-[#07031a] border-y border-white/5">
-          <div className="max-w-6xl mx-auto px-4 lg:px-0 py-16 lg:py-20">
-            <div className="text-center mb-10">
-              <div className="text-xs tracking-[0.3em] uppercase text-purple-300 mb-3">
-                LIVE-STYLE RESULTS
-              </div>
-              <h2 className="text-3xl font-bold mb-2">
-                Before MAT vs After MAT
+              <h2 className="text-3xl font-bold mb-4">
+                One workspace to track{' '}
+                <span className="text-fuchsia-400">every move you make</span>.
               </h2>
-              <p className="text-sm text-white/60 max-w-xl mx-auto">
-                When reps see their numbers in real time, behavior changes fast.
-                Teams using MAT typically see more activity within the first week.
+              <p className="text-white/70 mb-6">
+                Most reps have numbers in five different places. MAT pulls your entire day
+                into one dashboard — and turns raw activity into momentum, pipeline, and
+                revenue.
               </p>
+
+              <ul className="space-y-4 text-sm text-white/80">
+                <li className="flex gap-3">
+                  <span className="mt-0.5 text-fuchsia-400">✓</span>
+                  <span>
+                    <strong>Daily activity tracker</strong> for calls, texts, emails,
+                    appointments, demos, and closes — with instant KPI targets so you
+                    always know if you’re ahead or behind.
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="mt-0.5 text-fuchsia-400">✓</span>
+                  <span>
+                    <strong>Pipeline & follow-up engine</strong> that turns every contact
+                    into a trackable opportunity with reminders, stages, and EOD roll-ups.
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="mt-0.5 text-fuchsia-400">✓</span>
+                  <span>
+                    <strong>AI content studio</strong> for outbound messages, follow-ups,
+                    social posts, and scripts — built right into your daily workspace.
+                  </span>
+                </li>
+                <li className="flex gap-3">
+                  <span className="mt-0.5 text-fuchsia-400">✓</span>
+                  <span>
+                    <strong>Manager dashboards</strong> so leaders see every rep’s daily
+                    grind — activity, pipeline, and revenue — in one click.
+                  </span>
+                </li>
+              </ul>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
-              <div className="rounded-3xl bg-red-500/10 border border-red-400/40 p-5">
-                <div className="text-xs uppercase tracking-[0.2em] text-red-300 mb-2">
-                  Before MAT
-                </div>
-                <ul className="space-y-2 text-white/75">
-                  <li>• Reps guessing at daily targets</li>
-                  <li>• Managers buried in spreadsheets</li>
-                  <li>• Inconsistent follow-up and missed deals</li>
-                  <li>• Pipeline feels like a black box</li>
-                </ul>
-              </div>
-              <div className="rounded-3xl bg-emerald-500/10 border border-emerald-400/40 p-5 md:col-span-2">
-                <div className="text-xs uppercase tracking-[0.2em] text-emerald-300 mb-2">
-                  After MAT
-                </div>
-                <div className="grid sm:grid-cols-3 gap-4">
-                  <div>
-                    <div className="text-3xl font-black mb-1">+35%</div>
-                    <div className="text-xs text-white/60">More daily outbound activity</div>
+            <div className="relative">
+              <div className="absolute inset-0 blur-3xl bg-fuchsia-500/20 rounded-3xl -z-10" />
+              <div className="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-xl shadow-fuchsia-500/20">
+                <p className="text-xs font-semibold text-fuchsia-200 tracking-[0.22em] uppercase mb-3">
+                  Live snapshot
+                </p>
+                <h3 className="text-xl font-bold mb-4">
+                  Today&apos;s Massive Action Overview
+                </h3>
+                <div className="grid grid-cols-2 gap-3 text-xs sm:text-sm mb-4">
+                  <div className="rounded-2xl bg-black/40 border border-white/10 px-4 py-3">
+                    <div className="text-white/50 mb-1">Calls</div>
+                    <div className="text-2xl font-bold text-emerald-400">42</div>
+                    <div className="text-[0.65rem] text-emerald-300">
+                      +17 vs daily target
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-3xl font-black mb-1">2×</div>
-                    <div className="text-xs text-white/60">More appointments set per rep</div>
+                  <div className="rounded-2xl bg-black/40 border border-white/10 px-4 py-3">
+                    <div className="text-white/50 mb-1">New Leads</div>
+                    <div className="text-2xl font-bold text-cyan-300">19</div>
+                    <div className="text-[0.65rem] text-cyan-200">
+                      6 booked on the calendar
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-3xl font-black mb-1">20–40%</div>
-                    <div className="text-xs text-white/60">
-                      Lift in monthly pipeline value
+                  <div className="rounded-2xl bg-black/40 border border-white/10 px-4 py-3 col-span-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-white/60">Revenue today</span>
+                      <span className="text-xs text-emerald-300">On-track</span>
+                    </div>
+                    <div className="text-2xl font-bold">$5,930</div>
+                    <div className="text-[0.7rem] text-white/50">
+                      Projected month: <span className="text-emerald-300">$148,500</span>
                     </div>
                   </div>
                 </div>
-                <p className="text-[11px] text-white/50 mt-3">
-                  *Illustrative example based on coaching clients using consistent daily
-                  tracking and coaching inside MAT.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
 
-        {/* OLD WAY vs NEW WAY */}
-        <section id="how-it-works" className="py-16 lg:py-20">
-          <div className="max-w-6xl mx-auto px-4 lg:px-0">
-            <h2 className="text-3xl font-bold text-center mb-10">
-              Old way vs MAT&apos;s <span className="text-purple-300">Massive Action</span> method
-            </h2>
-            <div className="grid md:grid-cols-2 gap-6 text-sm">
-              <div className="rounded-3xl bg-red-500/5 border border-red-400/40 p-6">
-                <h3 className="text-lg font-semibold mb-4">Old Way</h3>
-                <ul className="space-y-3 text-white/70">
-                  <li>✖ Spreadsheets and sticky notes everywhere</li>
-                  <li>✖ Reps &quot;feel&quot; busy but can&apos;t prove it with numbers</li>
-                  <li>✖ One-on-ones spent guessing where deals are stuck</li>
-                  <li>✖ No consistent rhythm for outbound or follow-up</li>
-                </ul>
-              </div>
-              <div className="rounded-3xl bg-emerald-500/5 border border-emerald-400/40 p-6">
-                <h3 className="text-lg font-semibold mb-4">MAT Method</h3>
-                <ul className="space-y-3 text-white/80">
-                  <li>✔ One daily dashboard for all KPIs and revenue</li>
-                  <li>✔ Reps get clear daily targets and Massive Action prompts</li>
-                  <li>✔ Managers see who&apos;s winning and who needs coaching instantly</li>
-                  <li>✔ Every day ends with an EOD report and real data-driven coaching</li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* 3 BENEFITS */}
-        <section className="bg-[#07031a] border-y border-white/5 py-16 lg:py-20">
-          <div className="max-w-6xl mx-auto px-4 lg:px-0">
-            <h2 className="text-3xl font-bold text-center mb-10">
-              3 ways MAT instantly upgrades your sales team
-            </h2>
-            <div className="grid md:grid-cols-3 gap-6 text-sm">
-              {[
-                {
-                  title: 'Total clarity',
-                  body: 'Every rep knows exactly what winning looks like today — no more “I thought I was on pace.”',
-                },
-                {
-                  title: 'Pipeline you can trust',
-                  body: 'Appointments, follow-ups and deals are logged in the flow of work, not forgotten in someone’s notebook.',
-                },
-                {
-                  title: 'Built-in coaching',
-                  body: 'Leaders can coach from real activity and revenue numbers instead of vague feelings or &quot;How do you think it went?&quot;',
-                },
-              ].map((item, i) => (
-                <div
-                  key={item.title}
-                  className="rounded-3xl bg-white/5 border border-white/10 p-6 flex flex-col"
-                >
-                  <div className="h-8 w-8 rounded-full bg-purple-500/20 flex items-center justify-center mb-4 text-sm font-bold">
-                    {i + 1}
+                <div className="rounded-2xl bg-black/60 border border-white/10 px-4 py-3">
+                  <div className="text-xs font-semibold text-white/70 mb-2">
+                    Today&apos;s Top 6 Targets
                   </div>
-                  <h3 className="text-lg font-semibold mb-2">{item.title}</h3>
-                  <p className="text-white/70">{item.body}</p>
+                  <ul className="space-y-1 text-xs text-white/70">
+                    <li>• 25 new cold calls to high-value targets</li>
+                    <li>• 3 follow-up demos re-set from last week</li>
+                    <li>• 10 warm texts to pipeline stuck in &quot;thinking&quot;</li>
+                    <li>• 5 social DMs to past buyers</li>
+                    <li>• 1 big offer video to your list</li>
+                    <li>• 15 minutes of skill training</li>
+                  </ul>
                 </div>
-              ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* SOCIAL PROOF / BEFORE & AFTER STYLE */}
+        <section id="proof" className="py-16 border-t border-white/5">
+          <h2 className="text-3xl font-bold mb-2">
+            Before MAT vs after MAT inside your team.
+          </h2>
+          <p className="text-white/70 mb-8 max-w-2xl">
+            The difference isn&apos;t &quot;more software&quot;. It&apos;s giving every
+            rep a simple target, a scoreboard, and a coach in their pocket.
+          </p>
+
+          <div className="grid md:grid-cols-2 gap-6 text-sm">
+            <div className="rounded-3xl bg-[#1a1024] border border-red-500/40 p-6">
+              <p className="text-xs font-semibold tracking-[0.22em] uppercase text-red-300 mb-3">
+                Old way
+              </p>
+              <ul className="space-y-3 text-white/80">
+                <li>• KPIs scattered across spreadsheets and CRMs.</li>
+                <li>• Reps &quot;busy&quot; but pipeline stays thin.</li>
+                <li>• No real EOD accountability or coaching leverage.</li>
+                <li>• Activity drops every time life gets loud.</li>
+              </ul>
+            </div>
+            <div className="rounded-3xl bg-[#071821] border border-emerald-400/40 p-6">
+              <p className="text-xs font-semibold tracking-[0.22em] uppercase text-emerald-300 mb-3">
+                MAT method
+              </p>
+              <ul className="space-y-3 text-white/80">
+                <li>
+                  • Every rep sees exactly what to hit today: calls, texts, emails,
+                  demos, revenue.
+                </li>
+                <li>
+                  • Leaders see activity, pipeline, and closes in real-time — no more
+                  guessing.
+                </li>
+                <li>
+                  • AI helps generate messages, content, and follow-up scripts on the fly.
+                </li>
+                <li>
+                  • Culture of Massive Action — everyone chasing targets, daily.
+                </li>
+              </ul>
             </div>
           </div>
         </section>
 
         {/* PRICING */}
-        <section id="pricing" className="py-18 lg:py-24">
-          <div className="max-w-6xl mx-auto px-4 lg:px-0">
-            <div className="text-center mb-10">
-              <div className="text-xs tracking-[0.3em] uppercase text-purple-300 mb-3">
-                Pricing
-              </div>
-              <h2 className="text-3xl font-bold mb-2">
-                Choose your MAT plan and build a{' '}
-                <span className="text-purple-300">Massive Action</span> culture
-              </h2>
-              <p className="text-sm text-white/60">
-                All plans include the full Massive Action Tracker platform and a 7-day free trial.
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6">
-              {/* Starter */}
-              <div className="rounded-3xl bg-white/5 border border-white/10 p-6 flex flex-col">
-                <h3 className="text-lg font-semibold mb-1">Starter</h3>
-                <p className="text-xs text-white/50 mb-4">For solo closers and freelancers</p>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-3xl font-black">$39</span>
-                  <span className="text-xs text-white/60">/month</span>
-                </div>
-                <ul className="text-sm text-white/75 space-y-2 mb-6">
-                  <li>• 1 user</li>
-                  <li>• Full MAT dashboard & KPI tracking</li>
-                  <li>• Daily EOD reports & pipeline tracking</li>
-                  <li>• Access to MAT quick-start training</li>
-                </ul>
-                <a
-                  href="/signup"
-                  className="mt-auto inline-flex justify-center px-4 py-2.5 text-sm font-semibold rounded-xl bg-white text-[#050111] hover:bg-zinc-200 transition"
-                >
-                  Start Starter Plan
-                </a>
-              </div>
-
-              {/* Team – most popular */}
-              <div className="rounded-3xl bg-gradient-to-b from-purple-600/40 via-purple-600/30 to-[#050111] border border-purple-400/70 p-6 flex flex-col shadow-[0_0_50px_rgba(168,85,247,0.55)] scale-[1.02]">
-                <div className="inline-flex items-center self-start px-3 py-1 rounded-full bg-white/15 text-[11px] font-semibold uppercase tracking-[0.18em] mb-4">
-                  🔥 Most Popular
-                </div>
-                <h3 className="text-lg font-semibold mb-1">Team</h3>
-                <p className="text-xs text-white/60 mb-4">
-                  For growing sales teams who need real accountability
-                </p>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-3xl font-black">$149</span>
-                  <span className="text-xs text-white/70">/month</span>
-                </div>
-                <ul className="text-sm text-white/85 space-y-2 mb-6">
-                  <li>• Up to 10 users</li>
-                  <li>• Full MAT dashboards for every rep</li>
-                  <li>• Manager view with team KPIs & revenue</li>
-                  <li>• Priority email support</li>
-                </ul>
-                <a
-                  href="/signup"
-                  className="mt-auto inline-flex justify-center px-4 py-2.5 text-sm font-semibold rounded-xl bg-white text-[#050111] hover:bg-zinc-200 transition"
-                >
-                  Start Team Plan
-                </a>
-              </div>
-
-              {/* Elite */}
-              <div className="rounded-3xl bg-white/5 border border-amber-400/70 p-6 flex flex-col">
-                <h3 className="text-lg font-semibold mb-1">Elite</h3>
-                <p className="text-xs text-white/60 mb-4">
-                  For teams who want tools <em>and</em> coaching
-                </p>
-                <div className="flex items-baseline gap-1 mb-4">
-                  <span className="text-3xl font-black">$399</span>
-                  <span className="text-xs text-white/70">/month</span>
-                </div>
-                <ul className="text-sm text-white/80 space-y-2 mb-6">
-                  <li>• Up to 10 users</li>
-                  <li>• Everything in Team plan</li>
-                  <li>• 1 group coaching call per month</li>
-                  <li>• Strategy help to build a 10X sales culture</li>
-                </ul>
-                <a
-                  href="/signup"
-                  className="mt-auto inline-flex justify-center px-4 py-2.5 text-sm font-semibold rounded-xl bg-amber-400 text-[#050111] hover:bg-amber-300 transition"
-                >
-                  Start Elite Plan
-                </a>
-              </div>
-            </div>
-
-            <p className="text-xs text-white/50 text-center mt-6">
-              Need more than 10 users or custom onboarding?{' '}
-              <a href="mailto:support@truexpanse.com" className="underline hover:text-white">
-                Talk to us about a custom MAT rollout.
-              </a>
+        <section id="pricing" className="py-16 border-t border-white/5">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl font-bold mb-3">
+              Pick your MAT plan. <span className="text-fuchsia-400">Grow fast.</span>
+            </h2>
+            <p className="text-white/70 max-w-xl mx-auto">
+              All plans include the full Massive Action Tracker platform, AI content tools,
+              pipeline tracking, and manager dashboards. Choose the level of firepower your
+              team needs.
             </p>
           </div>
-        </section>
 
-        {/* FINAL CTA */}
-        <section className="bg-[#050111] py-14 border-t border-white/10">
-          <div className="max-w-6xl mx-auto px-4 lg:px-0 text-center">
-            <div className="text-xs tracking-[0.3em] uppercase text-purple-300 mb-3">
-              What are you waiting for?
+          <div className="grid md:grid-cols-3 gap-6">
+            {/* Starter */}
+            <div className="rounded-3xl border border-white/10 bg-white/5 p-6 flex flex-col">
+              <h3 className="text-lg font-semibold mb-1">Solo Closer</h3>
+              <p className="text-sm text-white/60 mb-4">
+                For individual killers who want iron-clad daily discipline.
+              </p>
+              <div className="mb-4">
+                <span className="text-4xl font-bold">$39</span>
+                <span className="text-sm text-white/60"> /month</span>
+              </div>
+              <ul className="text-sm text-white/75 space-y-2 mb-6 flex-1">
+                <li>• 1 user seat</li>
+                <li>• Full MAT daily dashboard</li>
+                <li>• AI content & follow-up tools</li>
+                <li>• Basic revenue + KPI reports</li>
+              </ul>
+              <a
+                href="#"
+                className="inline-flex justify-center items-center px-4 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-indigo-500 text-sm font-semibold shadow-lg shadow-fuchsia-500/40 hover:shadow-fuchsia-500/70 transition"
+              >
+                Start Solo Plan
+              </a>
             </div>
-            <h2 className="text-3xl font-bold mb-3">Give your team a scoreboard they can’t ignore.</h2>
-            <p className="text-sm text-white/60 max-w-xl mx-auto mb-6">
-              The companies that win don’t “hope” their reps are taking action —
-              they measure it. MAT makes that measurement automatic and motivating.
+
+            {/* Team (most popular) */}
+            <div className="rounded-3xl border border-fuchsia-400/70 bg-[#140822] p-6 flex flex-col relative overflow-hidden">
+              <div className="absolute -top-3 right-4 px-3 py-1 rounded-full bg-fuchsia-500 text-[0.68rem] font-semibold tracking-[0.16em] uppercase">
+                Most Popular
+              </div>
+              <h3 className="text-lg font-semibold mb-1">Team Engine</h3>
+              <p className="text-sm text-white/70 mb-4">
+                Up to 10 reps running at full tilt, with leadership visibility.
+              </p>
+              <div className="mb-4">
+                <span className="text-4xl font-bold">$149</span>
+                <span className="text-sm text-white/60"> /month</span>
+              </div>
+              <ul className="text-sm text-white/80 space-y-2 mb-6 flex-1">
+                <li>• Up to 10 user seats</li>
+                <li>• Full MAT dashboards for every rep</li>
+                <li>• Manager performance dashboard & EOD reports</li>
+                <li>• AI content studio for the entire team</li>
+                <li>• Priority support</li>
+              </ul>
+              <a
+                href="#"
+                className="inline-flex justify-center items-center px-4 py-3 rounded-xl bg-gradient-to-r from-fuchsia-500 to-cyan-400 text-sm font-semibold shadow-lg shadow-fuchsia-500/40 hover:shadow-fuchsia-500/70 transition"
+              >
+                Start Team Engine
+              </a>
+            </div>
+
+            {/* Elite + Coaching */}
+            <div className="rounded-3xl border border-emerald-400/60 bg-[#041c18] p-6 flex flex-col">
+              <h3 className="text-lg font-semibold mb-1">Elite + Coaching</h3>
+              <p className="text-sm text-white/70 mb-4">
+                10 seats of MAT plus monthly coaching to drive execution.
+              </p>
+              <div className="mb-4">
+                <span className="text-4xl font-bold">$399</span>
+                <span className="text-sm text-white/60"> /month</span>
+              </div>
+              <ul className="text-sm text-white/80 space-y-2 mb-6 flex-1">
+                <li>• Up to 10 user seats</li>
+                <li>• Everything in Team Engine</li>
+                <li>• 1 group coaching call / month</li>
+                <li>• Deep KPI review & game-plan</li>
+                <li>• Designed for teams serious about 7-figure growth</li>
+              </ul>
+              <a
+                href="#"
+                className="inline-flex justify-center items-center px-4 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-400 text-sm font-semibold shadow-lg shadow-emerald-500/40 hover:shadow-emerald-500/70 transition"
+              >
+                Apply for Elite
+              </a>
+            </div>
+          </div>
+
+          <div className="mt-10 text-center text-sm text-white/60 space-y-3">
+            <p>
+              <button
+                type="button"
+                onClick={openLogin}
+                className="text-fuchsia-300 hover:text-fuchsia-100 underline-offset-4 hover:underline"
+              >
+                Already a MAT customer? Login to your workspace
+              </button>
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <a
-                href="#pricing"
-                className="px-6 py-3 rounded-xl text-sm font-semibold bg-gradient-to-r from-purple-500 via-fuchsia-500 to-red-500 shadow-lg shadow-purple-500/40 hover:brightness-110 transition"
-              >
-                Start Your 7-Day Free Trial
-              </a>
-              <a
-                href="/login"
-                className="px-6 py-3 rounded-xl text-sm font-semibold border border-white/30 hover:bg-white/5 transition"
-              >
-                Already a customer? Login
-              </a>
-            </div>
+            <p>No setup fees. Upgrade or downgrade anytime as your team scales.</p>
           </div>
         </section>
       </main>
+
+      {/* LOGIN MODAL */}
+      {showLogin && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+          <div className="w-full max-w-sm rounded-3xl bg-[#050316] border border-white/10 p-6 relative">
+            <button
+              type="button"
+              onClick={() => setShowLogin(false)}
+              className="absolute top-3 right-3 text-white/50 hover:text-white"
+            >
+              ✕
+            </button>
+            <h2 className="text-xl font-semibold mb-1">Login to Massive Action Tracker</h2>
+            <p className="text-xs text-white/60 mb-5">
+              Enter the email and password you used when your MAT account was created.
+            </p>
+
+            <form onSubmit={handleLoginSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={loginEmail}
+                  onChange={(e) => setLoginEmail(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-sm focus:outline-none focus:border-fuchsia-400"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-medium mb-1">Password</label>
+                <input
+                  type="password"
+                  required
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-sm focus:outline-none focus:border-fuchsia-400"
+                />
+              </div>
+
+              {loginError && (
+                <p className="text-xs text-red-400 bg-red-500/10 border border-red-500/40 rounded-lg px-3 py-2">
+                  {loginError}
+                </p>
+              )}
+
+              <button
+                type="submit"
+                disabled={isLoggingIn}
+                className="w-full mt-1 py-2.5 rounded-xl text-sm font-semibold bg-gradient-to-r from-fuchsia-500 to-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                {isLoggingIn ? 'Logging in…' : 'Login'}
+              </button>
+            </form>
+
+            <p className="mt-3 text-[0.7rem] text-white/50">
+              Having trouble? Make sure you&apos;re using the same credentials your MAT
+              account was created with, or contact support.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
