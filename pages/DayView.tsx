@@ -72,13 +72,15 @@ const DayView: React.FC<DayViewProps> = ({
   );
 
   // ✅ Always merge updates into the latest currentData for this day
-  const updateCurrentData = (updates: Partial<DayData>) => {
-    const updatedData: DayData = {
-      ...currentData,
-      ...updates,
-    };
-    onDataChange(currentDateKey, updatedData);
+const updateCurrentData = (updates: Partial<DayData>) => {
+  // Always merge into the latest currentData snapshot for this date
+  const updatedData: DayData = {
+    ...currentData,
+    ...updates,
   };
+  onDataChange(currentDateKey, updatedData);
+};
+
 
   const calculatedRevenue = useMemo<RevenueData>(() => {
     const todayKey = getDateKey(selectedDate);
