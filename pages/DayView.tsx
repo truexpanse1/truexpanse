@@ -14,7 +14,7 @@ import {
 import { getSalesChallenges } from '../services/geminiService';
 import Calendar from '../components/Calendar';
 import RevenueCard from '../components/RevenueCard';
-import AIChallengeCard from '../components/AChallengeCard';
+import AIChallengeCard from '../components/AIChallengeCard';   // ← Fixed
 import ProspectingKPIs from '../components/ProspectingKPIs';
 import AppointmentsBlock from '../components/AppointmentsBlock';
 import GoalsBlock from '../components/GoalsBlock';
@@ -73,10 +73,9 @@ const DayView: React.FC<DayViewProps> = ({
     onDataChange(currentDateKey, updatedData);
   };
 
-  // Persistent completed state for Top 6 Targets
   const [completedTargets, setCompletedTargets] = useState<boolean[]>(new Array(6).fill(false));
 
-  // Load completed state from Supabase (bulletproof matching)
+  // Load completed state — bulletproof matching
   useEffect(() => {
     const loadCompleted = async () => {
       if (!user?.id || !currentData.topTargets || currentData.topTargets.length === 0) {
@@ -106,7 +105,6 @@ const DayView: React.FC<DayViewProps> = ({
     loadCompleted();
   }, [currentDateKey, currentData.topTargets, user?.id]);
 
-  // Fixed AI Challenge — no overwrites
   const handleAcceptAIChallenge = async () => {
     setIsAiChallengeLoading(true);
     try {
@@ -134,7 +132,7 @@ const DayView: React.FC<DayViewProps> = ({
     }
   };
 
-  // FINAL FIXED: Save + Uncheck works 100%
+  // FINAL FIXED — checking AND unchecking work forever
   const handleGoalChange = async (
     type: 'topTargets' | 'massiveGoals',
     updatedGoal: Goal,
@@ -152,7 +150,6 @@ const DayView: React.FC<DayViewProps> = ({
         newCompleted[index] = updatedGoal.completed || false;
         setCompletedTargets(newCompleted);
 
-        // THIS IS THE ONE THAT FINALLY WORKS BOTH WAYS
         await supabase
           .from('goals')
           .upsert(
@@ -165,7 +162,7 @@ const DayView: React.FC<DayViewProps> = ({
             },
             {
               onConflict: 'user_id,goal_date,text',
-              ignoreDuplicates: false,   // ← Forces update even for completed=false
+              ignoreDuplicates: false,   // ← This forces completed=false to save
             }
           );
       }
@@ -176,7 +173,6 @@ const DayView: React.FC<DayViewProps> = ({
     }
   };
 
-  // Revenue calculation (unchanged)
   const calculatedRevenue = useMemo<RevenueData>(() => {
     const todayKey = getDateKey(selectedDate);
     const startOfWeek = new Date(selectedDate);
@@ -238,7 +234,7 @@ const DayView: React.FC<DayViewProps> = ({
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:items-start">
         <div className="space-y-8">
-          <Calendar selectedDate Eventi={selectedDate} onDateChange={onDateChange} />
+          <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
           <RevenueCard data={calculatedRevenue} onNavigate={onNavigateToRevenue} />
           <AIChallengeCard data={currentData.aiChallenge} isLoading={isAiChallengeLoading} onAcceptChallenge={handleAcceptAIChallenge} />
         </div>
