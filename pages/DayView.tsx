@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import {
   DayData,
   RevenueData,
@@ -80,6 +80,14 @@ const DayView: React.FC<DayViewProps> = ({
   const currentDateKey = getDateKey(selectedDate);
   const currentData: DayData = allData[currentDateKey] || getInitialDayData();
 
+  // 🔹 Local copy of events so checkbox state doesn't "snap back" on re-render
+  const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(currentData.events || []);
+
+  // Keep localEvents in sync whenever the date changes or new data arrives
+  useEffect(() => {
+    setLocalEvents(currentData.events || []);
+  }, [currentData.events]);
+
   const updateCurrentData = async (updates: Partial<DayData>) => {
     const updatedData: DayData = {
       ...(allData[currentDateKey] || getInitialDayData()),
@@ -129,10 +137,10 @@ const DayView: React.FC<DayViewProps> = ({
   }, [transactions, selectedDate]);
 
   const appointments = useMemo(() => {
-    return (currentData.events || [])
+    return (localEvents || [])
       .filter((e): e is CalendarEvent => e?.type === 'Appointment')
       .sort((a, b) => (a.time || '').localeCompare(b.time || ''));
-  }, [currentData.events]);
+  }, [localEvents]);
 
   const leadsAddedToday = useMemo(
     () => (hotLeads || []).filter((c) => c.dateAdded?.startsWith(currentDateKey)),
@@ -184,6 +192,8 @@ const DayView: React.FC<DayViewProps> = ({
     const updatedEvents = editingEvent
       ? existingEvents.map((e) => (e.id === savedEvent.id ? savedEvent : e))
       : [...existingEvents, savedEvent];
+
+    setLocalEvents(updatedEvents);
     updateCurrentData({ events: updatedEvents });
     setIsEventModalOpen(false);
     setEditingEvent(null);
@@ -191,6 +201,7 @@ const DayView: React.FC<DayViewProps> = ({
 
   const handleEventDelete = (eventId: string) => {
     const updatedEvents = (currentData.events || []).filter((e) => e.id !== eventId);
+    setLocalEvents(updatedEvents);
     updateCurrentData({ events: updatedEvents });
   };
 
@@ -242,7 +253,7 @@ const DayView: React.FC<DayViewProps> = ({
         <div className="space-y-8">
           <ProspectingKPIs
             contacts={currentData.prospectingContacts || []}
-            events={currentData.events || []}
+            events={localEvents || []}
           />
 
           {/* TODAY'S APPOINTMENTS */}
@@ -264,41 +275,56 @@ const DayView: React.FC<DayViewProps> = ({
               <p className="text-gray-500 italic">No appointments today.</p>
             ) : (
               <div className="space-y-3">
-                {appointments.map((event) => (
-                  <div key={event.id} className="flex items-center space-x-3">
-                    <input
-                      type="checkbox"
-                      className="w-5 h-5 form-checkbox text-green-600 rounded focus:ring-green-500"
-                      checked={!!event.completed}
-                      onChange={async (e) => {
-                        const newCompleted = e.target.checked;
+                {appointments.map((event) => {
+                  // Try to pull a client name from event if available
+                  const clientName =
+                    (event as any).clientName ||
+                    (event as any).contactName ||
+                    '';
 
-                        const updatedEvents = (currentData.events || []).map((evt) =>
-                          evt.id === event.id ? { ...evt, completed: newCompleted } : evt
-                        );
+                  const label = clientName
+                    ? `${clientName} — ${event.title || 'Appointment'}`
+                    : event.title || 'Appointment';
 
-                        await updateCurrentData({ events: updatedEvents });
+                  return (
+                    <div key={event.id} className="flex items-center space-x-3">
+                      <input
+                        type="checkbox"
+                        className="w-5 h-5 form-checkbox text-green-600 rounded focus:ring-green-500"
+                        checked={!!event.completed}
+                        onChange={async (e) => {
+                          const newCompleted = e.target.checked;
 
-                        if (newCompleted) {
-                          onAddWin(
-                            currentDateKey,
-                            `Appointment Completed: ${event.title || 'Appointment'}`
+                          // Update local state immediately so the UI stays checked
+                          const updatedEvents = (localEvents || []).map((evt) =>
+                            evt.id === event.id ? { ...evt, completed: newCompleted } : evt
                           );
-                          // 🔁 This is also where your follow-up campaign trigger
-                          // can hook in, if you need to call another function.
-                        }
-                      }}
-                    />
-                    <div className={event.completed ? 'line-through text-gray-500' : ''}>
-                      <p className="font-medium">{event.title || 'Appointment'}</p>
-                      {event.time && (
-                        <p className="text-sm text-gray-600">
-                          {formatTime12Hour(event.time)}
-                        </p>
-                      )}
+                          setLocalEvents(updatedEvents);
+
+                          // Persist to parent / backend
+                          await updateCurrentData({ events: updatedEvents });
+
+                          if (newCompleted) {
+                            onAddWin(
+                              currentDateKey,
+                              `Appointment Completed: ${event.title || 'Appointment'}`
+                            );
+                            // 🔁 This is also where your follow-up campaign trigger
+                            // can hook in, if you need to call another function.
+                          }
+                        }}
+                      />
+                      <div className={event.completed ? 'line-through text-gray-500' : ''}>
+                        <p className="font-medium">{label}</p>
+                        {event.time && (
+                          <p className="text-sm text-gray-600">
+                            {formatTime12Hour(event.time)}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
