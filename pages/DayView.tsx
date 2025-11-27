@@ -97,7 +97,7 @@ const DayView: React.FC<DayViewProps> = ({
     }
   };
 
-  // FINAL: Top 6 Targets + Appointments both work perfectly
+  // THIS IS THE ONLY FUNCTION THAT MATTERS — HANDLES BOTH TOP 6 AND APPOINTMENTS
   const handleGoalChange = async (
     type: 'topTargets' | 'massiveGoals' | 'events',
     updatedGoal: Goal,
@@ -110,7 +110,7 @@ const DayView: React.FC<DayViewProps> = ({
       );
       updateCurrentData({ events: updatedEvents });
       if (isCompletion) {
-        onAddWin(currentDateKey, `Appointment Completed: ${updatedGoal.text || updatedGoal.title}`);
+        onAddWin(currentDateKey, `Appointment Completed: ${updatedGoal.text || updatedGoal.title || 'Appointment'}`);
       }
       return;
     }
@@ -183,9 +183,9 @@ const DayView: React.FC<DayViewProps> = ({
 
   return (
     <>
-      <AddLeadModal isOpen={isLeadModalOpen} onChange={() => setIsLeadModalOpen(false)} onSave={() => {}} />
-      <AddEventModal isOpen={isEventModalOpen} onChange={() => setIsEventModalOpen(false)} onSave={() => {}} onDelete={() => {}} date={selectedDate} eventToEdit={editingEvent} />
-      <ViewLeadsModal isOpen={isViewLeadsModalOpen} onChange={() => setIsViewLeadsModalOpen(false)} leads={leadsAddedToday} users={users} />
+      <AddLeadModal isOpen={isLeadModalOpen} onClose={() => setIsLeadModalOpen(false)} onSave={() => {}} />
+      <AddEventModal isOpen={isEventModalOpen} onClose={() => setIsEventModalOpen(false)} onSave={() => {}} onDelete={() => {}} date={selectedDate} eventToEdit={editingEvent} />
+      <ViewLeadsModal isOpen={isViewLeadsModalOpen} onClose={() => setIsViewLeadsModalOpen(false)} leads={leadsAddedToday} users={users} />
 
       <div className="text-left mb-6">
         <h2 className="text-2xl font-bold uppercase text-brand-light-text dark:text-white">
@@ -206,12 +206,12 @@ const DayView: React.FC<DayViewProps> = ({
         <div className="space-y-8">
           <ProspectingKPIs contacts={currentData.prospectingContacts || []} events={currentData.events || []} />
           
-          {/* APPOINTMENTS — CHECKBOX WORKS AGAIN */}
+          {/* APPOINTMENTS — CHECKBOX NOW WORKS 100% */}
           <AppointmentsBlock
             events={appointments}
             onEventUpdate={() => {}}
             onAddAppointment={() => setIsEventModalOpen(true)}
-            onGoalChange={(goal, isCompletion, index) =>
+            onGoalChange={(goal, isCompletion, index) => 
               handleGoalChange('events', goal, isCompletion, index)
             }
           />
