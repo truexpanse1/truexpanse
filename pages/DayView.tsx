@@ -9,6 +9,7 @@ import {
   User,
   getInitialDayData,
   formatCurrency,
+  formatTime12Hour,
 } from '../types';
 import { getSalesChallenges } from '../services/geminiService';
 import Calendar from '../components/Calendar';
@@ -38,18 +39,6 @@ interface DayViewProps {
   user: User;
 }
 
-/** 24h → 12h time formatting e.g. "15:00" -> "3:00 PM" */
-const formatTime12Hour = (time?: string): string => {
-  if (!time) return '';
-  const [hourStr, minuteStr = '00'] = time.split(':');
-  let hour = parseInt(hourStr, 10);
-  if (Number.isNaN(hour)) return time;
-  const suffix = hour >= 12 ? 'PM' : 'AM';
-  if (hour === 0) hour = 12;
-  else if (hour > 12) hour -= 12;
-  return `${hour}:${minuteStr} ${suffix}`;
-};
-
 const DayView: React.FC<DayViewProps> = ({
   allData,
   onDataChange,
@@ -74,10 +63,10 @@ const DayView: React.FC<DayViewProps> = ({
   const currentDateKey = getDateKey(selectedDate);
   const currentData: DayData = allData[currentDateKey] || getInitialDayData();
 
-  /** 🔹 Local events so a click doesn’t instantly get overwritten */
+  // Local copy of events so the checkbox doesn't snap back
   const [localEvents, setLocalEvents] = useState<CalendarEvent[]>(currentData.events || []);
 
-  /** When the date changes, reset local events to that day’s events */
+  // When the selected date changes, reset local events
   useEffect(() => {
     const newData: DayData = allData[currentDateKey] || getInitialDayData();
     setLocalEvents(newData.events || []);
@@ -131,7 +120,6 @@ const DayView: React.FC<DayViewProps> = ({
     };
   }, [transactions, selectedDate]);
 
-  /** Only pull appointments from localEvents */
   const appointments = useMemo(() => {
     return (localEvents || [])
       .filter((e): e is CalendarEvent => e?.type === 'Appointment')
@@ -272,45 +260,38 @@ const DayView: React.FC<DayViewProps> = ({
             ) : (
               <div className="space-y-3">
                 {appointments.map((event) => {
-                  // Prefer the client/contact name from the event
-                  const clientName =
-                    (event as any).clientName ||
-                    (event as any).contactName ||
-                    '';
-
-                  const label = clientName
-                    ? `${clientName} — ${event.title || 'Appointment'}`
-                    : event.title || 'Appointment';
+                  const label = event.client
+                    ? `${event.client} — ${event.title}`
+                    : event.title;
 
                   return (
                     <div key={event.id} className="flex items-center space-x-3">
                       <input
                         type="checkbox"
                         className="w-5 h-5 form-checkbox text-green-600 rounded focus:ring-green-500"
-                        checked={!!event.completed}
+                        checked={!!event.conducted}
                         onChange={async (e) => {
-                          const newCompleted = e.target.checked;
+                          const newConducted = e.target.checked;
 
-                          // 1) Update local state immediately so it stays checked
+                          // Update local events immediately
                           const updatedEvents = (localEvents || []).map((evt) =>
-                            evt.id === event.id ? { ...evt, completed: newCompleted } : evt
+                            evt.id === event.id ? { ...evt, conducted: newConducted } : evt
                           );
                           setLocalEvents(updatedEvents);
 
-                          // 2) Persist to parent / backend
+                          // Persist to parent / storage
                           await updateCurrentData({ events: updatedEvents });
 
-                          // 3) Fire win + followup trigger when completed
-                          if (newCompleted) {
+                          if (newConducted) {
                             onAddWin(
                               currentDateKey,
-                              `Appointment Completed: ${event.title || 'Appointment'}`
+                              `Appointment Conducted: ${label}`
                             );
-                            // <=== hook follow-up campaign trigger here if needed
+                            // follow-up trigger can hook here if needed
                           }
                         }}
                       />
-                      <div className={event.completed ? 'line-through text-gray-500' : ''}>
+                      <div className={event.conducted ? 'line-through text-gray-500' : ''}>
                         <p className="font-medium">{label}</p>
                         {event.time && (
                           <p className="text-sm text-gray-600">
