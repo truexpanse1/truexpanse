@@ -71,14 +71,13 @@ const DayView: React.FC<DayViewProps> = ({
     await onDataChange(currentDateKey, updatedData);
   };
 
-  // REVENUE — FIXED (the only change from the broken version)
   const calculatedRevenue = useMemo<RevenueData>(() => {
     const todayKey = getDateKey(selectedDate);
     const startOfWeek = new Date(selectedDate);
     startOfWeek.setDate(startOfWeek.getDate() - selectedDate.getDay());
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(endOfWeek.getDate() + 6);
-    const startOfWeekKey = getDateKey(startOfWeek);   // ← FIXED LINE
+    const startOfWeekKey = getDateKey(startOfWeek);
     const endOfWeekKey = getDateKey(endOfWeek);
     const currentMonth = selectedDate.getMonth();
     const currentYear = selectedDate.getFullYear();
@@ -139,7 +138,7 @@ const DayView: React.FC<DayViewProps> = ({
     setEditingEvent(null);
 
     if (savedEvent.type === 'Appointment') {
-      onAddWin(currentDateKey, `Appointment Set: ${savedEvent.title} at ${formatTime12Hour(savedEvent.time)}`);
+      onAddWin(currentDateKey, `Appointment Set with ${savedEvent.contact || 'Client'} at ${formatTime12Hour(savedEvent.time)}`);
     }
   };
 
@@ -164,7 +163,6 @@ const DayView: React.FC<DayViewProps> = ({
       />
       <ViewLeadsModal isOpen={isViewLeadsModalOpen} onClose={() => setIsViewLeadsModalOpen(false)} leads={leadsAddedToday} users={users} />
 
-      {/* Header */}
       <div className="text-left mb-6">
         <h2 className="text-2xl font-bold uppercase text-brand-light-text dark:text-white">
           {selectedDate.toLocaleDateString('en-US', { weekday: 'long' })}
@@ -175,18 +173,16 @@ const DayView: React.FC<DayViewProps> = ({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:items-start">
-        {/* Left Column */}
         <div className="space-y-8">
           <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
           <RevenueCard data={calculatedRevenue} onNavigate={onNavigateToRevenue} />
           <AIChallengeCard data={currentData.aiChallenge} isLoading={isAiChallengeLoading} onAcceptChallenge={async () => {}} />
         </div>
 
-        {/* Middle Column */}
         <div className="space-y-8">
           <ProspectingKPIs contacts={currentData.prospectingContacts || []} events={currentData.events || []} />
 
-          {/* TODAY'S APPOINTMENTS — FINAL FIXED */}
+          {/* CLIENT NAME FIRST — FINAL VERSION */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-red-600">TODAY'S APPOINTMENTS</h3>
@@ -220,22 +216,34 @@ const DayView: React.FC<DayViewProps> = ({
                         checked={!!event.completed}
                         onClick={(e) => e.stopPropagation()}
                         onChange={async () => {
-                          const updatedEvents = currentData.events!.map((e) =>
+                          const currentEvents = currentData.events || [];
+                          const updatedEvents = currentEvents.map((e) =>
                             e.id === event.id ? { ...e, completed: !e.completed } : e
                           );
                           await updateCurrentData({ events: updatedEvents });
+
                           if (!event.completed) {
-                            onAddWin(currentDateKey, `Appointment Completed: ${event.title} with ${event.contact || 'Client'} at ${formatTime12Hour(event.time)}`);
+                            onAddWin(currentDateKey, `Appointment Completed with ${event.contact || event.title} at ${formatTime12Hour(event.time)}`);
                           }
                         }}
                         className="w-5 h-5 mt-0.5 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
                       />
+
                       <div className={`flex-1 ${event.completed ? 'line-through text-gray-500' : ''}`}>
-                        <p className="font-semibold text-lg">{event.title}</p>
-                        {event.contact && <p className="text-sm text-gray-600 dark:text-gray-400">with {event.contact}</p>}
-                        <p className="text-sm font-medium text-brand-red">{formatTime12Hour(event.time)}</p>
+                        {/* CLIENT NAME FIRST */}
+                        <p className="font-bold text-xl">
+                          {event.contact || 'Client Appointment'}
+                        </p>
+                        {/* Title second */}
+                        {event.title && event.contact && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{event.title}</p>
+                        )}
+                        <p className="text-sm font-medium text-brand-red mt-1">
+                          {formatTime12Hour(event.time)}
+                        </p>
                       </div>
                     </div>
+
                     <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition">
                       <svg className="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -251,17 +259,24 @@ const DayView: React.FC<DayViewProps> = ({
           <WinsTodayCard wins={currentData.winsToday || []} />
         </div>
 
-        {/* Right Column */}
         <div className="space-y-8">
           <GoalsBlock
             title="Today's Top 6 Targets"
             goals={currentData.topTargets || []}
-            onGoalChange={(goal, isCompletion) => handleGoalChange('topTargets', goal, isCompletion)}
+            onGoalChange={(goal, isCompletion) => {
+              const updated = currentData.topTargets.map(g => g.id === goal.id ? { ...g, completed: isCompletion } : g);
+              updateCurrentData({ topTargets: updated });
+              if (isCompletion) onAddWin(currentDateKey, `Target Completed: ${goal.text}`);
+            }}
           />
           <GoalsBlock
             title="Massive Action Goals"
             goals={currentData.massiveGoals || []}
-            onGoalChange={(goal, isCompletion) => handleGoalChange('massiveGoals', goal, isCompletion)}
+            onGoalChange={(goal, isCompletion) => {
+              const updated = currentData.massiveGoals.map(g => g.id === goal.id ? { ...g, completed: isCompletion } : g);
+              updateCurrentData({ massiveGoals: updated });
+              if (isCompletion) onAddWin(currentDateKey, `Massive Goal Completed: ${goal.text}`);
+            }}
             highlight
           />
           <NewLeadsBlock
@@ -275,7 +290,5 @@ const DayView: React.FC<DayViewProps> = ({
     </>
   );
 };
-
-const handleGoalChange = () => {}; // placeholder – your real one is probably in the file already
 
 export default DayView;
