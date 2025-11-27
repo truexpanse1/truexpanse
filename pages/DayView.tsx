@@ -196,12 +196,21 @@ const DayView: React.FC<DayViewProps> = ({
           <ProspectingKPIs contacts={currentData.prospectingContacts || []} events={currentData.events || []} />
           
           {/* FIXED: Appointments checkbox works again */}
-          <AppointmentsBlock
-            events={appointments}
-            onEventUpdate={() => {}}
-            onAddAppointment={() => setIsEventModalOpen(true)}
-            onGoalChange={(goal, isCompletion) => handleGoalChange('events', goal, isCompletion)}
-          />
+<AppointmentsBlock
+  events={appointments}
+  onEventUpdate={() => {}}
+  onAddAppointment={() => setIsEventModalOpen(true)}
+  onGoalChange={(goal, isCompletion) => {
+    const updatedEvents = currentData.events?.map((e: any) =>
+      e.id === goal.id ? { ...e, completed: isCompletion } : e
+    );
+    updateCurrentData({ events: updatedEvents });
+    
+    if (isCompletion && goal.text?.trim()) {
+      onAddWin(currentDateKey, `Appointment Completed: ${goal.text}`);
+    }
+  }}
+/>
 
           <DailyFollowUps hotLeads={hotLeads} onUpdateHotLead={onUpdateHotLead} selectedDate={selectedDate} onWin={(msg) => onAddWin(currentDateKey, msg)} />
           <WinsTodayCard wins={currentData.winsToday || []} />
