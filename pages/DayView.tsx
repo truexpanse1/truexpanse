@@ -71,7 +71,44 @@ const DayView: React.FC<DayViewProps> = ({
     onDataChange(currentDateKey, updatedData);
   };
 
-  // FORMAT TIME TO 12-HOUR (NO MILITARY TIME)
+  // FIXED: calculatedRevenue is back and correct
+  const calculatedRevenue = useMemo<RevenueData>(() => {
+    const todayKey = getDateKey(selectedDate);
+    const startOfWeek = new Date(selectedDate);
+    startOfWeek.setDate(startOfWeek.getDate() - selectedDate.getDay());
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 6);
+    const startOfWeekKey = getDateKey(startOfWeek);
+    const endOfWeekKey = getDateKey(endOfWeek);
+    const currentMonth = selectedDate.getMonth();
+    const currentYear = selectedDate.getFullYear();
+
+    let today = 0, week = 0, month = 0, ytd = 0, mcv = 0;
+
+    (transactions || []).forEach((t) => {
+      const transactionDate = new Date(t.date + 'T00:00:00');
+      if (t.date === todayKey) today += t.amount;
+      if (t.date >= startOfWeekKey && t.date <= endOfWeekKey) week += t.amount;
+      if (transactionDate.getMonth() === currentMonth && transactionDate.getFullYear() === currentYear) {
+        month += t.amount;
+        if (t.isRecurring) mcv += t.amount;
+      }
+      if (transactionDate.getFullYear() === currentYear) ytd += t.amount;
+    });
+
+    const acv = mcv * 12;
+
+    return {
+      today: formatCurrency(today),
+      week: formatCurrency(week),
+      month: formatCurrency(month),
+      ytd: formatCurrency(ytd),
+      mcv: formatCurrency(mcv),
+      acv: formatCurrency(acv),
+    };
+  }, [transactions, selectedDate]);
+
+  // 12-hour time format (no military time)
   const formatTime12Hour = (time24: string) => {
     if (!time24) return '';
     const [hours, minutes] = time24.split(':');
@@ -81,7 +118,6 @@ const DayView: React.FC<DayViewProps> = ({
     return `${displayHour}:${minutes} ${ampm}`;
   };
 
-  // FIXED: Appointments now properly filtered and displayed
   const appointments = useMemo(() => {
     return (currentData.events || [])
       .filter((e): e is CalendarEvent => e?.type === 'Appointment' && !!e.time)
@@ -92,6 +128,47 @@ const DayView: React.FC<DayViewProps> = ({
     () => (hotLeads || []).filter((c) => c.dateAdded?.startsWith(currentDateKey)),
     [hotLeads, currentDateKey]
   );
+
+  const handleAcceptAIChallenge = async () => {
+    setIsAiChallengeLoading(true);
+    try {
+      const newChallenges = await getSalesChallenges();
+      if (!newChallenges?.length) throw new Error('No challenges');
+      const currentTopTargets = [...currentData.topTargets];
+      let placed = 0;
+      for (let i = 0; i < currentTopTargets.length && placed < newChallenges.length; i++) {
+        const text = typeof currentTopTargets[i] === 'string' ? currentTopTargets[i] : currentTopTargets[i].text || '';
+        if (!text.trim()) {
+          currentTopTargets[i] = { ...(currentTopTargets[i] as any), text: newChallenges[placed++] };
+        }
+      }
+      updateCurrentData({
+        topTargets: currentTopTargets,
+        aiChallenge: { ...currentData.aiChallenge, challengesAccepted: true, challenges: [] },
+      });
+      onAddWin(currentDateKey, 'AI Challenges Added to Targets!');
+    } catch (err) {
+      alert('Failed to generate AI challenges.');
+    } finally {
+      setIsAiChallengeLoading(false);
+    }
+  };
+
+  const handleGoalChange = async (
+    type: 'topTargets' | 'massiveGoals',
+    updatedGoal: Goal,
+    isCompletion: boolean,
+  ) => {
+    const goals = (currentData[type] || []) as Goal[];
+    const newGoals = goals.map((g) =>
+      g.id === updatedGoal.id ? { ...updatedGoal, completed: isCompletion } : g
+    );
+    updateCurrentData({ [type]: newGoals });
+
+    if (isCompletion && updatedGoal.text?.trim()) {
+      onAddWin(currentDateKey, `Target Completed: ${updatedGoal.text}`);
+    }
+  };
 
   const handleEventSaved = (savedEvent: CalendarEvent) => {
     const existingEvents = currentData.events || [];
@@ -150,7 +227,7 @@ const DayView: React.FC<DayViewProps> = ({
         <div className="space-y-8">
           <ProspectingKPIs contacts={currentData.prospectingContacts || []} events={currentData.events || []} />
 
-          {/* FIXED APPOINTMENTS SECTION — 100% WORKING */}
+          {/* APPOINTMENTS — FULLY FIXED */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-red-600">TODAY'S APPOINTMENTS</h3>
