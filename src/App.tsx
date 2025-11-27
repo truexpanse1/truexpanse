@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from './services/supabaseClient';
-import { Session } from '@supabase/supabase-js';
+import { Session, User as SupabaseUser } from '@supabase/supabase-js';
 
 import {
   View,
   User,
+  Role,
   DayData,
   Transaction,
   Contact,
@@ -12,6 +13,7 @@ import {
   NewClient,
   CalendarEvent,
   getInitialDayData,
+  UserStatus,
   EODSubmissions,
 } from './types';
 
@@ -84,10 +86,11 @@ const App: React.FC = () => {
   const [showConfetti, setShowConfetti] = useState(false);
   const [winMessage, setWinMessage] = useState('');
   const [contextualUserId, setContextualUserId] = useState<string | null>(null);
-  const [revenuePageInitialState, setRevenuePageInitialState] =
-    useState<{ viewMode: 'daily' | 'analysis'; dateRange?: { start: string; end: string } } | null>(null);
+  const [revenuePageInitialState, setRevenuePageInitialState] = useState<{
+    viewMode: 'daily' | 'analysis';
+    dateRange?: { start: string; end: string };
+  } | null>(null);
 
-  // THEME
   useEffect(() => {
     const storedTheme = localStorage.getItem('theme') as
       | 'dark'
@@ -106,7 +109,6 @@ const App: React.FC = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // AUTH SESSION
   useEffect(() => {
     const fetchInitialSession = async () => {
       setIsLoading(true);
@@ -148,7 +150,6 @@ const App: React.FC = () => {
     };
   }, []);
 
-  // INITIAL DATA LOAD
   useEffect(() => {
     if (!session) return;
 
@@ -156,19 +157,15 @@ const App: React.FC = () => {
       setIsLoading(true);
       setFetchError(null);
       try {
-        const {
-          data: userProfile,
-          error: profileError,
-        } = await supabase
+        const { data: userProfile, error: profileError } = await supabase
           .from('users')
           .select('*')
           .eq('id', session.user.id)
           .single();
         if (profileError) throw profileError;
-        setUser(userProfile as User);
+        setUser(userProfile);
 
-        const userIdToFetch =
-          userProfile.role === 'Manager' ? null : userProfile.id;
+        const userIdToFetch = userProfile.role === 'Manager' ? null : userProfile.id;
 
         let dayDataQuery = supabase.from('day_data').select('*');
         let hotLeadsQuery = supabase.from('hot_leads').select('*');
@@ -184,21 +181,15 @@ const App: React.FC = () => {
           quotesQuery = quotesQuery.eq('user_id', userIdToFetch);
         }
 
-        const [
-          dayDataRes,
-          hotLeadsRes,
-          transactionsRes,
-          clientsRes,
-          quotesRes,
-          usersRes,
-        ] = await Promise.all([
-          dayDataQuery,
-          hotLeadsQuery,
-          transactionsQuery,
-          clientsQuery,
-          quotesQuery,
-          supabase.from('users').select('*'),
-        ]);
+        const [dayDataRes, hotLeadsRes, transactionsRes, clientsRes, quotesRes, usersRes] =
+          await Promise.all([
+            dayDataQuery,
+            hotLeadsQuery,
+            transactionsQuery,
+            clientsQuery,
+            quotesQuery,
+            supabase.from('users').select('*'),
+          ]);
 
         for (const res of [
           dayDataRes,
@@ -211,45 +202,16 @@ const App: React.FC = () => {
           if (res.error) throw res.error;
         }
 
-        // 🔥 NORMALIZE & HYDRATE DAY DATA
-        if (dayDataRes.data) {
-          const mapped: { [key: string]: DayData } = {};
-
-          (dayDataRes.data as any[]).forEach((row) => {
-            const dateKey = row.date as string;
-            const stored: DayData = row.data as DayData;
-            const base = getInitialDayData();
-
-            const merged: DayData = {
-              ...base,
-              ...stored,
-              events: (stored.events || []).map((e: any) => ({
-                ...e,
-                conducted: e.conducted ?? false,
-              })),
-              topTargets: (stored.topTargets || base.topTargets).map(
-                (g: any, idx: number) => ({
-                  ...g,
-                  id: g.id || `top-${idx + 1}`,
-                  completed: g.completed ?? false,
-                })
-              ),
-              massiveGoals: (stored.massiveGoals || base.massiveGoals).map(
-                (g: any, idx: number) => ({
-                  ...g,
-                  id: g.id || `massive-${idx + 1}`,
-                  completed: g.completed ?? false,
-                })
-              ),
-              userId: row.user_id,
-            };
-
-            mapped[dateKey] = merged;
-          });
-
-          setAllData(mapped);
-        }
-
+        if (dayDataRes.data)
+          setAllData(
+            dayDataRes.data.reduce(
+              (acc, row) => ({
+                ...acc,
+                [row.date]: { ...row.data, userId: row.user_id },
+              }),
+              {}
+            )
+          );
         if (hotLeadsRes.data)
           setHotLeads(
             hotLeadsRes.data.map((lead: any) => ({
@@ -305,7 +267,6 @@ const App: React.FC = () => {
     fetchAllData();
   }, [session]);
 
-  // CONFETTI
   useEffect(() => {
     if (showConfetti) {
       const timer = setTimeout(() => {
@@ -318,27 +279,19 @@ const App: React.FC = () => {
 
   const handleLogout = () => supabase.auth.signOut();
 
-  // 🔥 CENTRAL DAYDATA SAVE: keeps events.conducted & goals.completed
   const handleUpsertDayData = async (dateKey: string, data: DayData) => {
     if (!user) return;
 
-    const userIdForDb = (data as any).userId || user.id;
+    const userIdForDb = data.userId || user.id;
+    const dataForState = { ...data, userId: userIdForDb };
 
-    // State version keeps userId
-    const dataForState: DayData = {
-      ...data,
-      userId: userIdForDb,
-    } as DayData;
+    // update local state
+    setAllData((prev) => ({ ...prev, [dateKey]: dataForState }));
 
-    setAllData((prev) => ({
-      ...prev,
-      [dateKey]: dataForState,
-    }));
+    // strip userId before sending to DB
+    const { userId, ...dataForDb } = dataForState;
 
-    // DB version stores everything except userId in the JSON "data" column
-    const { userId: _omitUserId, ...dataForDb } = dataForState as any;
-
-    const { error } = await supabase
+    await supabase
       .from('day_data')
       .upsert(
         {
@@ -348,16 +301,40 @@ const App: React.FC = () => {
         },
         { onConflict: 'user_id, date' }
       );
-
-    if (error) {
-      console.error('Error upserting day_data', error);
-    }
   };
 
+  // 🔹 FIXED: avoid overwriting fresh checkbox state with stale data
   const handleAddWin = (dateKey: string, message: string) => {
-    const dayData = allData[dateKey] || getInitialDayData();
-    const updatedWins = [...(dayData.winsToday || []), message];
-    handleUpsertDayData(dateKey, { ...dayData, winsToday: updatedWins });
+    setAllData((prev) => {
+      const existing: DayData = prev[dateKey] || getInitialDayData();
+      const updatedWins = [...(existing.winsToday || []), message];
+
+      const updatedDay: DayData = {
+        ...existing,
+        winsToday: updatedWins,
+      };
+
+      // Fire Supabase upsert using this updated snapshot
+      (async () => {
+        if (!user) return;
+        const userIdForDb = updatedDay.userId || user.id;
+        const { userId, ...dataForDb } = { ...updatedDay };
+
+        await supabase
+          .from('day_data')
+          .upsert(
+            {
+              user_id: userIdForDb,
+              date: dateKey,
+              data: dataForDb,
+            },
+            { onConflict: 'user_id, date' }
+          );
+      })();
+
+      return { ...prev, [dateKey]: updatedDay };
+    });
+
     setWinMessage(message);
     setShowConfetti(true);
   };
@@ -642,12 +619,13 @@ const App: React.FC = () => {
   const handleNavigateToRevenue = (
     period: 'today' | 'week' | 'month' | 'ytd' | 'mcv' | 'acv'
   ) => {
-    const getDateKey = (date: Date): string =>
-      date.toISOString().split('T')[0];
-    let initialState: {
-      viewMode: 'daily' | 'analysis';
-      dateRange?: { start: string; end: string };
-    } | null = { viewMode: 'analysis' };
+    const getDateKey = (date: Date): string => date.toISOString().split('T')[0];
+    let initialState:
+      | {
+          viewMode: 'daily' | 'analysis';
+          dateRange?: { start: string; end: string };
+        }
+      | null = { viewMode: 'analysis' };
     if (period === 'today') {
       initialState = { viewMode: 'daily' };
     } else {
@@ -662,11 +640,7 @@ const App: React.FC = () => {
         case 'month':
         case 'mcv':
         case 'acv':
-          startDate = new Date(
-            selectedDate.getFullYear(),
-            selectedDate.getMonth(),
-            1
-          );
+          startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1);
           endDate = new Date(
             selectedDate.getFullYear(),
             selectedDate.getMonth() + 1,
@@ -795,9 +769,7 @@ const App: React.FC = () => {
             selectedDate={selectedDate}
             onDateChange={setSelectedDate}
             initialState={revenuePageInitialState}
-            onInitialStateConsumed={() =>
-              setRevenuePageInitialState(null)
-            }
+            onInitialStateConsumed={() => setRevenuePageInitialState(null)}
           />
         );
       case 'ai-images':
