@@ -127,24 +127,53 @@ const DayView: React.FC<DayViewProps> = ({
     [hotLeads, currentDateKey]
   );
 
-  const handleEventSaved = (savedEvent: CalendarEvent) => {
+  const handleAcceptAIChallenge = async () => {
+    setIsAiChallengeLoading(true);
+    try {
+      const newChallenges = await getSalesChallenges();
+      if (!newChallenges?.length) throw new Error('No challenges');
+      const currentTopTargets = [...(currentData.topTargets || [])];
+      let placed = 0;
+      for (let i = 0; i < currentTopTargets.length && placed < newChallenges.length; i++) {
+        const text = typeof currentTopTargets[i] === 'string' ? currentTopTargets[i] : currentTopTargets[i]?.text || '';
+        if (!text.trim()) {
+          currentTopTargets[i] = { id: crypto.randomUUID(), text: newChallenges[placed++], completed: false };
+        }
+      }
+      updateCurrentData({
+        topTargets: currentTopTargets,
+        aiChallenge: { ...currentData.aiChallenge, challengesAccepted: true, challenges: [] },
+      });
+      onAddWin(currentDateKey, 'AI Challenges Added to Targets!');
+    } catch (err) {
+      alert('Failed to generate AI challenges.');
+    } finally {
+      setIsAiChallengeLoading(false);
+    }
+  };
+
+  const handleGoalChange = async (type: 'topTargets' | 'massiveGoals', updatedGoal: Goal, isCompletion: boolean) => {
+    const goals = (currentData[type] || []) as Goal[];
+    const newGoals = goals.map((g) => (g.id === updatedGoal.id ? { ...updatedGoal, completed: isCompletion } : g));
+    updateCurrentData({ [type]: newGoals });
+    if (isCompletion && updatedGoal.text?.trim()) {
+      onAddWin(currentDateKey, `${type === 'topTargets' ? 'Target' : 'Massive Goal'} Completed: ${updatedGoal.text}`);
+    }
+  };
+
+  const handleEventSaved = async (savedEvent: CalendarEvent) => {
     const existingEvents = currentData.events || [];
     const updatedEvents = editingEvent
       ? existingEvents.map((e) => (e.id === savedEvent.id ? savedEvent : e))
       : [...existingEvents, savedEvent];
-
-    updateCurrentData({ events: updatedEvents });
+    await updateCurrentData({ events: updatedEvents });
     setIsEventModalOpen(false);
     setEditingEvent(null);
-
-    if (savedEvent.type === 'Appointment') {
-      onAddWin(currentDateKey, `Appointment Set with ${savedEvent.contact || 'Client'} at ${formatTime12Hour(savedEvent.time)}`);
-    }
   };
 
-  const handleEventDelete = (eventId: string) => {
+  const handleEventDelete = async (eventId: string) => {
     const updatedEvents = (currentData.events || []).filter((e) => e.id !== eventId);
-    updateCurrentData({ events: updatedEvents });
+    await updateCurrentData({ events: updatedEvents });
   };
 
   return (
@@ -176,13 +205,13 @@ const DayView: React.FC<DayViewProps> = ({
         <div className="space-y-8">
           <Calendar selectedDate={selectedDate} onDateChange={onDateChange} />
           <RevenueCard data={calculatedRevenue} onNavigate={onNavigateToRevenue} />
-          <AIChallengeCard data={currentData.aiChallenge} isLoading={isAiChallengeLoading} onAcceptChallenge={async () => {}} />
+          <AIChallengeCard data={currentData.aiChallenge} isLoading={isAiChallengeLoading} onAcceptChallenge={handleAcceptAIChallenge} />
         </div>
 
         <div className="space-y-8">
           <ProspectingKPIs contacts={currentData.prospectingContacts || []} events={currentData.events || []} />
 
-          {/* CLIENT NAME FIRST — FINAL VERSION */}
+          {/* FINAL APPOINTMENTS — CLIENT NAME FIRST, STAYS CHECKED */}
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-xl font-bold text-red-600">TODAY'S APPOINTMENTS</h3>
@@ -216,29 +245,23 @@ const DayView: React.FC<DayViewProps> = ({
                         checked={!!event.completed}
                         onClick={(e) => e.stopPropagation()}
                         onChange={async () => {
-                          const currentEvents = currentData.events || [];
-                          const updatedEvents = currentEvents.map((e) =>
+                          const updatedEvents = (currentData.events || []).map((e) =>
                             e.id === event.id ? { ...e, completed: !e.completed } : e
                           );
                           await updateCurrentData({ events: updatedEvents });
-
                           if (!event.completed) {
-                            onAddWin(currentDateKey, `Appointment Completed with ${event.contact || event.title} at ${formatTime12Hour(event.time)}`);
+                            onAddWin(currentDateKey, `Appointment Completed: ${event.contact || event.title} at ${formatTime12Hour(event.time)}`);
                           }
                         }}
-                        className="w-5 h-5 mt-0.5 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
+                        className="w-5 h-5 mt-1 text-green-600 rounded focus:ring-2 focus:ring-green-500 cursor-pointer"
                       />
 
                       <div className={`flex-1 ${event.completed ? 'line-through text-gray-500' : ''}`}>
-                        {/* CLIENT NAME FIRST */}
-                        <p className="font-bold text-xl">
-                          {event.contact || 'Client Appointment'}
-                        </p>
-                        {/* Title second */}
+                        <p className="font-bold text-xl">{event.contact || 'Unnamed Client'}</p>
                         {event.title && event.contact && (
                           <p className="text-sm text-gray-600 dark:text-gray-400">{event.title}</p>
                         )}
-                        <p className="text-sm font-medium text-brand-red mt-1">
+                        <p className="text-sm font-medium text-red-600 mt-1">
                           {formatTime12Hour(event.time)}
                         </p>
                       </div>
@@ -263,20 +286,12 @@ const DayView: React.FC<DayViewProps> = ({
           <GoalsBlock
             title="Today's Top 6 Targets"
             goals={currentData.topTargets || []}
-            onGoalChange={(goal, isCompletion) => {
-              const updated = currentData.topTargets.map(g => g.id === goal.id ? { ...g, completed: isCompletion } : g);
-              updateCurrentData({ topTargets: updated });
-              if (isCompletion) onAddWin(currentDateKey, `Target Completed: ${goal.text}`);
-            }}
+            onGoalChange={(goal, isCompletion) => handleGoalChange('topTargets', goal, isCompletion)}
           />
           <GoalsBlock
             title="Massive Action Goals"
             goals={currentData.massiveGoals || []}
-            onGoalChange={(goal, isCompletion) => {
-              const updated = currentData.massiveGoals.map(g => g.id === goal.id ? { ...g, completed: isCompletion } : g);
-              updateCurrentData({ massiveGoals: updated });
-              if (isCompletion) onAddWin(currentDateKey, `Massive Goal Completed: ${goal.text}`);
-            }}
+            onGoalChange={(goal, isCompletion) => handleGoalChange('massiveGoals', goal, isCompletion)}
             highlight
           />
           <NewLeadsBlock
