@@ -570,8 +570,8 @@ const LandingPage: React.FC = () => {
               </p>
             </div>
             <img
-              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/uGojrZQFwEYwfaXX.jpg"
-              alt="End of Day Report"
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/ixKXRwlQLvplwOFZ.jpg"
+              alt="AI Image Generation"
               className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
             />
           </div>
