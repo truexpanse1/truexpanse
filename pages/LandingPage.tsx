@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { supabase } from '../services/supabaseClient';
 import { startStripeCheckout } from '../services/billingService';
 
-// Stripe Price IDs - Update these with your actual price IDs
-const SOLO_PRICE_ID = 'price_1SVIo3AF9E77pmGUVxM0u4z1';   // $39 Solo Closer
-const TEAM_PRICE_ID = 'price_1SVIo3AF9E77pmGUVxM0u4z1';   // $149 Team Engine
+// Stripe Price IDs - Update these with your actual price IDsconst SOLO_PRICE_ID = 'price_1SVlc7AF9E77pmGU1ZadSw1A';   // $39 Solo Closer
+const TEAM_PRICE_ID = 'price_1SVIo3AF9E77pmGUWmOiZw0';   // $149 Team Engine
 const ELITE_PRICE_ID = 'price_1SVIo3AF9E77pmGUVxM0u4z1'; // $399 Elite / Company plan
 
 interface PlanInfo {
@@ -134,13 +133,23 @@ const LandingPage: React.FC = () => {
 
     try {
       // Step 1: Create user account in Supabase Auth
+      // We assume a 'companies' table exists and a 'profiles' table with a 'company_id' foreign key.
+      const companyName = purchaseForm.company || purchaseForm.name + "'s Company";
+      
+// 1a: Create or get Company ID (Simplified for client-side, ideally this is an API call)
+	      // **MULTI-TENANCY NOTE**: The current implementation is a client-side placeholder.
+	      // For a production app, this logic should be moved to a Supabase Edge Function
+	      // to securely create the company record and assign the company_id to the user's profile.
+	      const companyIdentifier = companyName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: purchaseForm.email,
         password: Math.random().toString(36).slice(-12), // Generate temporary password
         options: {
           data: {
             name: purchaseForm.name,
-            company: purchaseForm.company,
+            company: companyName,
+            company_id: companyIdentifier, // Placeholder for multi-tenancy
             phone: purchaseForm.phone,
             plan: selectedPlan.id,
           },
@@ -463,9 +472,11 @@ const LandingPage: React.FC = () => {
         <div className="max-w-7xl mx-auto space-y-20 md:space-y-32">
           {/* Feature 1 */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
-            <div className="rounded-3xl shadow-lg border border-gray-200 bg-gray-100 h-64 md:h-80 flex items-center justify-center">
-              <span className="text-gray-400 text-lg">Feature Image</span>
-            </div>
+            <img
+           src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/ixKXRwlQLvplwOFZ.jpg"
+              alt="AI Image Generation"
+              className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
+            />
             <div>
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
                 End Your Day Strong
@@ -486,16 +497,20 @@ const LandingPage: React.FC = () => {
                 Real-time revenue tracking with average deal size and trends.
               </p>
             </div>
-            <div className="rounded-3xl shadow-lg border border-gray-200 bg-gray-100 h-64 md:h-80 flex items-center justify-center">
-              <span className="text-gray-400 text-lg">Feature Image</span>
-            </div>
+            <img
+         src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/HAJnAsRVWQxIpIei.jpg"
+              alt="Revenue Center"
+              className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
+            />
           </div>
 
           {/* Feature 3 */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
-            <div className="rounded-3xl shadow-lg border border-gray-200 bg-gray-100 h-64 md:h-80 flex items-center justify-center">
-              <span className="text-gray-400 text-lg">Feature Image</span>
-            </div>
+            <img
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/TKIMNfRJfmBDifrH.jpg"
+              alt="New Clients List"
+              className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
+            />
             <div>
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
                 Celebrate Every Win
@@ -516,16 +531,20 @@ const LandingPage: React.FC = () => {
                 Your daily call list with one-tap tracking.
               </p>
             </div>
-            <div className="rounded-3xl shadow-lg border border-gray-200 bg-gray-100 h-64 md:h-80 flex items-center justify-center">
-              <span className="text-gray-400 text-lg">Feature Image</span>
-            </div>
+            <img
+         src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/PRyIpAjeiuhiPTeR.jpg"
+              alt="Performance Dashboard"
+              className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
+            />
           </div>
 
           {/* Feature 5 */}
           <div className="grid md:grid-cols-2 gap-8 md:gap-16 items-center">
-            <div className="rounded-3xl shadow-lg border border-gray-200 bg-gray-100 h-64 md:h-80 flex items-center justify-center">
-              <span className="text-gray-400 text-lg">Feature Image</span>
-            </div>
+            <img
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/FkVOuvmuxkkghaMP.jpg"
+              alt="Prospecting List"
+              className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
+            />
             <div>
               <h3 className="text-3xl md:text-4xl font-black mb-4 text-gray-900">
                 Lead Your Team to Victory
@@ -546,9 +565,11 @@ const LandingPage: React.FC = () => {
                 Generate perfect social posts, emails, and images in seconds.
               </p>
             </div>
-            <div className="rounded-3xl shadow-lg border border-gray-200 bg-gray-100 h-64 md:h-80 flex items-center justify-center">
-              <span className="text-gray-400 text-lg">Feature Image</span>
-            </div>
+            <img
+              src="https://files.manuscdn.com/user_upload_by_module/session_file/310519663033216620/uGojrZQFwEYwfaXX.jpg"
+              alt="End of Day Report"
+              className="rounded-3xl shadow-lg border border-gray-200 object-cover w-full h-full"
+            />
           </div>
         </div>
       </section>
