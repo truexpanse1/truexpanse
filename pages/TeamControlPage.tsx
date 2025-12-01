@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import AddUserModal from '../../components/AddUserModal'; // adjust path if needed
+import AddUserModal from '../components/AddUserModal'; // ← THIS WAS THE PROBLEM — now correct
 
 interface User {
   id: string;
@@ -29,7 +29,6 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
     // your toggle logic
   };
 
-  // THIS IS THE CRITICAL FIX — DEMO MODE IS GONE FOREVER
   const handleAddUser = () => {
     setIsModalOpen(true);
   };
@@ -72,7 +71,7 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
                       className={`px-2 py-1 text-xs font-semibold rounded-full ${
                         user.status === 'Active'
                           ? 'bg-brand-lime/20 text-brand-lime'
-                          : 'bg-brand-gray/50 text-gray-gray-400'
+                          : 'bg-brand-gray/50 text-gray-400'
                       }`}
                     >
                       {user.status}
@@ -113,7 +112,6 @@ const TeamControlPage: React.FC<TeamControlPageProps> = ({ users, onViewUserTren
         </div>
       </div>
 
-      {/* Add User Modal */}
       {isModalOpen && (
         <AddUserModal
           isOpen={isModalOpen}
