@@ -179,6 +179,7 @@ export const generateImage = async (
     // We pass everything through gemini-2.5-flash-image instead of Imagen,
     // because this matches what works in Google AI Studio and avoids
     // separate Imagen / Vertex configuration.
+    // FINAL CODE REFRESH: Ensuring Vercel sees a change and redeploys the function handler.
     const fullPrompt = aspectRatio
       ? `${prompt}\n\nAspect ratio: ${aspectRatio}`
       : prompt;
@@ -213,7 +214,6 @@ export const generateImage = async (
     throw error;
   }
 };
-
 /**
  * IMAGE EDITING
  * Takes an existing base64 image + prompt and returns a new edited image as data URL.
