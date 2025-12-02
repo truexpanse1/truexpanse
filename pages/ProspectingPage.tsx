@@ -212,7 +212,6 @@ const ProspectingPage: React.FC<ProspectingPageProps> = ({
   };
 
   return (
-    {/* 👇 NEW GRID LAYOUT: fixed 280px left column, rest goes to the table, smaller gap */}
     <div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)] gap-6">
       {/* LEFT COLUMN – calendar + KPIs + quick actions */}
       <div className="space-y-8">
