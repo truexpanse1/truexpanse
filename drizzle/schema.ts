@@ -218,3 +218,112 @@ export const kpis = pgTable("kpis", {
 
 export type Kpi = typeof kpis.$inferSelect;
 export type InsertKpi = typeof kpis.$inferInsert;
+
+// ============================================================
+// ASCEND — Life Growth Operating System Tables
+// ============================================================
+
+/**
+ * ASCEND user profile — stores onboarding data and pillar preferences
+ */
+export const ascendProfiles = pgTable("ascend_profiles", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull().unique(),
+
+  // Onboarding
+  whyStatement: text("why_statement"),       // "I want to ASCEND because..."
+  ninetyDayGoal: text("ninety_day_goal"),    // What they want to achieve in 90 days
+  onboardingCompleted: boolean("onboarding_completed").default(false).notNull(),
+
+  // Pillar activation (which pillars the user tracks)
+  pillars: json("pillars").$type<{
+    prosperity: boolean;
+    promote: boolean;
+    purpose: boolean;
+    people: boolean;
+  }>().default({ prosperity: true, promote: true, purpose: true, people: true }),
+
+  // Streak tracking
+  currentStreak: integer("current_streak").default(0).notNull(),
+  longestStreak: integer("longest_streak").default(0).notNull(),
+  lastCheckInDate: text("last_check_in_date"), // YYYY-MM-DD
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type AscendProfile = typeof ascendProfiles.$inferSelect;
+export type InsertAscendProfile = typeof ascendProfiles.$inferInsert;
+
+/**
+ * ASCEND daily check-ins — morning ritual + evening reflection per day
+ */
+export const ascendCheckIns = pgTable("ascend_check_ins", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  checkInDate: text("check_in_date").notNull(), // YYYY-MM-DD
+
+  // Morning Ritual
+  morningCompleted: boolean("morning_completed").default(false).notNull(),
+  morningCompletedAt: timestamp("morning_completed_at"),
+  priority1: text("priority_1"),
+  priority2: text("priority_2"),
+  priority3: text("priority_3"),
+  financialAction: varchar("financial_action", { length: 50 }), // earn | invest | track | learn
+  financialNote: text("financial_note"),
+  spiritualState: varchar("spiritual_state", { length: 50 }), // grounded | neutral | need_support
+  morningIntention: text("morning_intention"),
+
+  // Evening Check-in
+  eveningCompleted: boolean("evening_completed").default(false).notNull(),
+  eveningCompletedAt: timestamp("evening_completed_at"),
+  priority1Done: varchar("priority_1_done", { length: 20 }), // yes | partial | no
+  priority2Done: varchar("priority_2_done", { length: 20 }),
+  priority3Done: varchar("priority_3_done", { length: 20 }),
+  winOfTheDay: text("win_of_the_day"),
+  improveTomorrow: text("improve_tomorrow"),
+
+  // Pillar activity logs (what they did in each pillar today)
+  prosperityNote: text("prosperity_note"),
+  promoteNote: text("promote_note"),
+  purposeNote: text("purpose_note"),
+  peopleNote: text("people_note"),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export type AscendCheckIn = typeof ascendCheckIns.$inferSelect;
+export type InsertAscendCheckIn = typeof ascendCheckIns.$inferInsert;
+
+/**
+ * ASCEND daily scores — computed after evening check-in
+ */
+export const ascendScores = pgTable("ascend_scores", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").notNull(),
+  scoreDate: text("score_date").notNull(), // YYYY-MM-DD
+
+  // Three dimensions (0-100 each)
+  momentum: real("momentum").default(0).notNull(),    // Consistency / streak / check-in rate
+  trajectory: real("trajectory").default(0).notNull(), // Numbers moving in right direction
+  alignment: real("alignment").default(0).notNull(),   // Living according to stated values
+
+  // Composite score
+  ascendScore: real("ascend_score").default(0).notNull(), // Weighted average
+
+  // Pillar sub-scores (0-100 each)
+  prosperityScore: real("prosperity_score").default(0),
+  promoteScore: real("promote_score").default(0),
+  purposeScore: real("purpose_score").default(0),
+  peopleScore: real("people_score").default(0),
+
+  // Completion flags
+  morningCompleted: boolean("morning_completed").default(false).notNull(),
+  eveningCompleted: boolean("evening_completed").default(false).notNull(),
+
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export type AscendScore = typeof ascendScores.$inferSelect;
+export type InsertAscendScore = typeof ascendScores.$inferInsert;

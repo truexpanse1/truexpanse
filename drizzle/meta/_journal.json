@@ -15,6 +15,13 @@
       "when": 1771399441328,
       "tag": "0001_sad_vin_gonzales",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1772562403727,
+      "tag": "0002_aspiring_the_stranger",
+      "breakpoints": true
     }
   ]
 }

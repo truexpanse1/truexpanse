@@ -409,3 +409,99 @@ export async function getKpisByDateRange(
     )
     .orderBy(desc(kpis.date));
 }
+
+// ===== ASCEND =====
+
+import {
+  ascendProfiles,
+  ascendCheckIns,
+  ascendScores,
+  type AscendProfile,
+  type AscendCheckIn,
+  type AscendScore,
+  type InsertAscendProfile,
+  type InsertAscendCheckIn,
+  type InsertAscendScore,
+} from "../drizzle/schema";
+
+export async function getAscendProfile(userId: number): Promise<AscendProfile | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(ascendProfiles).where(eq(ascendProfiles.userId, userId)).limit(1);
+  return result[0];
+}
+
+export async function upsertAscendProfile(profile: InsertAscendProfile): Promise<AscendProfile> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .insert(ascendProfiles)
+    .values(profile)
+    .onConflictDoUpdate({
+      target: ascendProfiles.userId,
+      set: { ...profile, updatedAt: new Date() },
+    })
+    .returning();
+  return result[0];
+}
+
+export async function getTodayCheckIn(userId: number, dateStr: string): Promise<AscendCheckIn | undefined> {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db
+    .select()
+    .from(ascendCheckIns)
+    .where(and(eq(ascendCheckIns.userId, userId), eq(ascendCheckIns.checkInDate, dateStr)))
+    .limit(1);
+  return result[0];
+}
+
+export async function upsertCheckIn(checkIn: InsertAscendCheckIn): Promise<AscendCheckIn> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .insert(ascendCheckIns)
+    .values(checkIn)
+    .onConflictDoUpdate({
+      target: [ascendCheckIns.userId, ascendCheckIns.checkInDate],
+      set: { ...checkIn, updatedAt: new Date() },
+    })
+    .returning();
+  return result[0];
+}
+
+export async function getRecentScores(userId: number, days: number = 30): Promise<AscendScore[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(ascendScores)
+    .where(eq(ascendScores.userId, userId))
+    .orderBy(desc(ascendScores.scoreDate))
+    .limit(days);
+}
+
+export async function upsertAscendScore(score: InsertAscendScore): Promise<AscendScore> {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const result = await db
+    .insert(ascendScores)
+    .values(score)
+    .onConflictDoUpdate({
+      target: [ascendScores.userId, ascendScores.scoreDate],
+      set: score,
+    })
+    .returning();
+  return result[0];
+}
+
+export async function getRecentCheckIns(userId: number, days: number = 30): Promise<AscendCheckIn[]> {
+  const db = await getDb();
+  if (!db) return [];
+  return db
+    .select()
+    .from(ascendCheckIns)
+    .where(eq(ascendCheckIns.userId, userId))
+    .orderBy(desc(ascendCheckIns.checkInDate))
+    .limit(days);
+}
